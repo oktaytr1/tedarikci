@@ -1,1 +1,1 @@
-export type EylemSonucu = { hata?: string; alanlar?: Record<string, string>; tamam?: string };
+export type EylemSonucu = { hata?: string; alanlar?: Record<string, string>; tamam?: string; id?: number };

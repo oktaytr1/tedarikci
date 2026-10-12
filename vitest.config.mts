@@ -4,7 +4,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
-    alias: { "@": fileURLToPath(new URL("./", import.meta.url)) },
+    alias: {
+      "@": fileURLToPath(new URL("./", import.meta.url)),
+      // server-only, Node test ortamında hata fırlatır; testler sunucu modüllerini doğrudan çalıştırır.
+      "server-only": fileURLToPath(new URL("./tests/bos-modul.ts", import.meta.url)),
+    },
   },
   test: {
     environment: "node",

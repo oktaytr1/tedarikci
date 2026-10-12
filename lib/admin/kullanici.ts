@@ -7,7 +7,6 @@
 //   - Admin kendini pasife alamaz; son aktif admin pasife alınamaz.
 
 import { z } from "zod";
-import type { Rol } from "@/generated/prisma/enums";
 import { GirisHatasi, IslemHatasi } from "@/lib/hatalar";
 import { PAROLA_EN_AZ, parolaHashle, parolaKuraliHatasi } from "@/lib/password";
 import type { Aktor, KapsamliDb } from "@/lib/scope-cekirdek";
@@ -20,7 +19,7 @@ export const KULLANICI_ISLEM = {
   durum: "kullanici.durum",
 } as const;
 
-export const ROL_ETIKETI: Record<Rol, string> = { admin: "Admin", tedarikci: "Tedarikçi", alici: "Alıcı" };
+export { ROL_ETIKETI } from "./firma-etiket";
 
 const eposta = z
   .string()

@@ -15,11 +15,7 @@ export const FIRMA_ISLEM = {
   durum: "firma.durum",
 } as const;
 
-export const FIRMA_TIP_ETIKETI: Record<FirmaTip, string> = {
-  tedarikci: "Tedarikçi",
-  alici: "Alıcı",
-  her_ikisi: "Her ikisi",
-};
+export { FIRMA_TIP_ETIKETI } from "./firma-etiket";
 
 export const firmaSemasi = z.object({
   unvan: z.string().trim().min(2, "Ünvan zorunlu.").max(200, "Ünvan en fazla 200 karakter."),

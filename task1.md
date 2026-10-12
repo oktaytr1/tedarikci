@@ -50,13 +50,13 @@ Hedef: yetkili firmalar giriş yapıp tedarikçileri ve ürünleri fiyatlarıyla
 
 ## 3. Admin paneli
 
-- [ ] Firma listesi + ekle/düzenle (tedarikçi ve alıcı), pasife alma
-- [ ] Kullanıcı açma: firma seçimi, rol seçimi (admin/tedarikçi/alıcı), parola belirleme
-- [ ] Ürün listesi: tedarikçiye göre filtre, arama, aktif/pasif
-- [ ] Ürün ekle/düzenle: kod, ad, açıklama, kategori, birim, koli adedi,
+- [x] Firma listesi + ekle/düzenle (tedarikçi ve alıcı), pasife alma
+- [x] Kullanıcı açma: firma seçimi, rol seçimi (admin/tedarikçi/alıcı), parola belirleme
+- [x] Ürün listesi: tedarikçiye göre filtre, arama, aktif/pasif
+- [x] Ürün ekle/düzenle: kod, ad, açıklama, kategori, birim, koli adedi,
       min. sipariş, liste fiyatı, KDV oranı, fotoğraf linki
-- [ ] Ürünü pasife alma (silme yok)
-- [ ] Toplu ürün girişi için CSV içe aktarma (opsiyonel, çok ürün varsa şart olur)
+- [x] Ürünü pasife alma (silme yok)
+- [ ] Toplu ürün girişi için CSV içe aktarma (opsiyonel, çok ürün varsa şart olur) — *bu turda yapılmadı*
 
 ## 4. Katalog (alıcı ekranı)
 

@@ -301,6 +301,27 @@ describe.skipIf(!VT_VAR)("admin servisleri (veritabanı)", () => {
     });
   });
 
+  describe("değişiklik geçmişi", () => {
+    it("alan bazında eski → yeni; fiyat ve KDV biçimli, parola yalnız 'değiştirildi'", async () => {
+      const gecmis = await import("@/lib/admin/gecmis");
+      await yaz(urun.URUN_ISLEM.guncelle, (vt, a) =>
+        urun.urunGuncelle(vt, a, k.urun.id, urunGirdisi({ kod: "U1", ad: "Ürün 1", listeFiyat: "1.234,50", kdvOrani: "10.00" })),
+      );
+      const [son] = await gecmis.kayitGecmisi(oku(), k.admin, "Urun", k.urun.id);
+      expect(son.islem).toBe("Ürün güncellendi");
+      expect(son.degisiklikler).toEqual(
+        expect.arrayContaining([
+          { alan: "Liste fiyatı", eski: "10,00 TL", yeni: "1.234,50 TL" },
+          { alan: "KDV oranı", eski: "%20", yeni: "%10" },
+        ]),
+      );
+      await yaz(kullanici.KULLANICI_ISLEM.parola, (vt, a) => kullanici.kullaniciParolaSifirla(vt, a, k.tedarikciA.kullaniciId, "yepyeni-parola-12"));
+      const [p] = await gecmis.kayitGecmisi(oku(), k.admin, "Kullanici", k.tedarikciA.kullaniciId);
+      expect(p).toMatchObject({ islem: "Parola sıfırlandı", degisiklikler: [{ alan: "Parola", eski: "", yeni: "değiştirildi" }] });
+      await expect(gecmis.kayitGecmisi(oku(k.tedarikciA), k.tedarikciA, "Urun", k.urun.id)).rejects.toThrow(cekirdek.YetkiHatasi);
+    });
+  });
+
   describe("yetki", () => {
     it("tedarikçi ve alıcı hiçbir admin servisini çalıştıramaz (okuma dahil)", async () => {
       const alici: Aktor = {
