@@ -2,6 +2,7 @@
 // parametreler URL'den okunur, geçersiz değerler yok sayılır. Para değerleri string döner.
 
 import { z } from "zod";
+import { urunAramaKosulu } from "@/lib/arama";
 import type { FirmaTip, Rol } from "@/generated/prisma/enums";
 import { dbOran, dbPara } from "@/lib/money";
 import type { Aktor, KapsamliDb } from "@/lib/scope-cekirdek";
@@ -56,9 +57,8 @@ export type UrunSatiri = {
 export async function urunListesi(vt: KapsamliDb, aktor: Aktor, f: UrunFiltresi) {
   adminGerekli(aktor);
   const ve: object[] = [];
-  if (f.q) {
-    ve.push({ OR: [{ kod: { contains: f.q, mode: "insensitive" } }, { ad: { contains: f.q, mode: "insensitive" } }] });
-  }
+  const arama = f.q ? urunAramaKosulu(f.q) : null;
+  if (arama) ve.push(arama);
   if (f.tedarikci) ve.push({ firma_id: f.tedarikci });
   if (f.kategori) ve.push({ kategori: f.kategori });
   if (f.durum) ve.push({ aktif: f.durum === "aktif" });

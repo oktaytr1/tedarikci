@@ -5,6 +5,7 @@
 // Para değerleri string döner; KDV dahil fiyat lib/money.ts ile hesaplanır.
 
 import { z } from "zod";
+import { urunAramaKosulu } from "@/lib/arama";
 import { dbOran, dbPara, satirHesapla } from "@/lib/money";
 import type { Aktor, KapsamliDb } from "@/lib/scope-cekirdek";
 import { YetkiHatasi } from "@/lib/scope-cekirdek";
@@ -93,7 +94,8 @@ function donustur(u: UrunKaydi): KatalogUrunu {
 export async function katalogListesi(vt: KapsamliDb, aktor: Aktor, f: KatalogFiltresi) {
   katalogaYetkili(aktor);
   const ve: object[] = [];
-  if (f.q) ve.push({ OR: [{ ad: { contains: f.q, mode: "insensitive" } }, { kod: { contains: f.q, mode: "insensitive" } }] });
+  const arama = f.q ? urunAramaKosulu(f.q) : null;
+  if (arama) ve.push(arama);
   if (f.tedarikci) ve.push({ firma_id: f.tedarikci });
   if (f.kategori) ve.push({ kategori: f.kategori });
   const where = ve.length ? { AND: ve } : {};

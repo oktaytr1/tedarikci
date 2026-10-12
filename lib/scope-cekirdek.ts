@@ -374,7 +374,8 @@ function fark(eskiSatir: Nesne, yeniSatir: Nesne): { eski: Nesne; yeni: Nesne } 
   const e: Nesne = {};
   const y: Nesne = {};
   for (const k of new Set([...Object.keys(eskiHam), ...Object.keys(yeniHam)])) {
-    if (k === "guncelleme") continue;
+    // guncelleme her yazmada değişir; arama_metni veritabanı tetikleyicisinin türettiği alandır.
+    if (k === "guncelleme" || k === "arama_metni") continue;
     if (JSON.stringify(eskiHam[k]) !== JSON.stringify(yeniHam[k])) {
       e[k] = eskiMaskeli[k] ?? null;
       y[k] = yeniMaskeli[k] ?? null;

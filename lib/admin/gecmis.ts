@@ -79,7 +79,7 @@ export async function kayitGecmisi(vt: KapsamliDb, aktor: Aktor, tablo: Tablo, i
     const degisiklikler = olusturma
       ? []
       : Object.keys(yeni)
-          .filter((a) => a !== "id" && a !== "olusturma" && a !== "guncelleme")
+          .filter((a) => a !== "id" && a !== "olusturma" && a !== "guncelleme" && a !== "arama_metni")
           .map((a) => ({
             alan: ALAN_ETIKETI[a] ?? a,
             eski: a === "parola_hash" ? "" : degerYaz(a, eski[a]),

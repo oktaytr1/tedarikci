@@ -113,6 +113,8 @@ model Urun {
   aciklama     String?
   kategori     String?
   fotograf_url String?
+  // Türkçe duyarsız arama metni (kod + ad). Uygulama yazmaz; veritabanı tetikleyicisi doldurur.
+  arama_metni  String?
   birim        String
   koli_adedi   Int?
   min_siparis  Decimal? @db.Decimal(18, 3)
