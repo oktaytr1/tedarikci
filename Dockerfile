@@ -31,6 +31,10 @@ COPY --from=build /app/public ./public
 COPY --from=build /app/generated ./generated
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
+# Yönetim betikleri (ilk admin: npx tsx scripts/admin-olustur.ts) ve bağımlı oldukları kaynaklar.
+COPY --from=build /app/scripts ./scripts
+COPY --from=build /app/lib ./lib
+COPY --from=build /app/tsconfig.json ./tsconfig.json
 USER app
 EXPOSE 3000
 # Önce bekleyen migration'lar uygulanır, sonra uygulama başlar.

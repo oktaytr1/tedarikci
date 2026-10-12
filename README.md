@@ -85,3 +85,79 @@ render edilen kısmının başka role gönderilmesini durdurmaz. Proxy'deki rol 
 Tetikleyici yalnız `DELETE` ifadesinde çalışır. `migrate reset` şemayı `DROP SCHEMA` ile düşürür,
 testler `TRUNCATE` ile temizler; ikisi de satır tetikleyicisini çalıştırmaz. Bu yüzden tetikleyici
 geliştirmede de açıktır, ayrı bir "geliştirme modu" yoktur.
+
+## Yayına alma
+
+Uygulama tek bir Docker imajıdır (`Dockerfile`): açılışta bekleyen migration'ları uygular
+(`prisma migrate deploy`), sonra `next start` ile 3000 portunda çalışır. Yanında PostgreSQL 16
+gerekir. Başka bileşen (kuyruk, Redis, dosya deposu) yoktur.
+
+### 1. Ortam değişkenleri
+
+Şablon ve açıklamalar: `.env.example`. Üretimde barındırma panelinin ortam değişkenleri bölümüne yazılır.
+
+| Değişken | Zorunlu | Ne | Nasıl üretilir |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | Evet | Üretim PostgreSQL bağlantısı | Barındırmanın verdiği bağlantı; ayrı kullanıcı + güçlü parola, uzaksa `sslmode=require` |
+| `AUTH_SECRET` | Evet | Oturum (JWT) imza anahtarı | `openssl rand -base64 32` — geliştirmedekinden **farklı** |
+| `AUTH_URL` | Evet | Dış adres, ör. `https://katalog.ornek.com` | Alan adı belli olunca |
+| `AUTH_TRUST_HOST` | Kendi sunucuda | Ters vekil arkasında Host başlığına güven | `true` (Vercel'de gerekmez) |
+| `PLATFORM_ILETISIM_EPOSTA` | Önerilir | Tedarikçi ekranındaki düzeltme iletişimi | Gerçek destek adresi |
+| `PLATFORM_ILETISIM_TELEFON` | Hayır | Aynı, telefon; boşsa gösterilmez | — |
+| `DIRECT_DATABASE_URL` | Havuz varsa | Migration'lar için doğrudan bağlantı | Havuzlu (pooler) bağlantı kullanılıyorsa |
+
+Üretime **konmayanlar**: `TEST_DATABASE_URL`, `ORNEK_ADMIN_PAROLA` (örnek veri betiği üretimde çalışmayı reddeder).
+
+### 2. Veritabanı
+
+- PostgreSQL **16**. Migration `unaccent` eklentisini kurar (`CREATE EXTENSION`): kullanıcının
+  eklenti kurma yetkisi olmalı (kendi Postgres'te var; yönetilen hizmetlerde `unaccent` genelde izinli).
+- Saat dilimi: imaj `TZ=Europe/Istanbul` ile çalışır; zaman damgaları `timestamptz` olarak saklanır.
+
+### 3. İlk yayın
+
+```bash
+# İmajı derle (barındırma Dockerfile'dan kendisi de derleyebilir)
+docker build -t tedarikci-pazarlama .
+
+# Çalıştır: açılışta migration'lar uygulanır
+docker run -d --name tedarikci -p 3000:3000 --env-file .env.uretim tedarikci-pazarlama
+
+# İlk admin (parola terminalden gizli sorulur; kayıt formu yoktur)
+docker exec -it tedarikci npx tsx scripts/admin-olustur.ts admin@firma.com
+```
+
+Sonra admin panelinden firmalar, kullanıcılar ve ürünler açılır. `npm run db:ornek` üretimde **çalıştırılmaz**.
+
+### 4. Günlük yedek (sunucu dışında) ve geri yükleme provası
+
+Para ve fiyat kaydı tutan sistem yedeksiz çalıştırılmaz; yedek sunucunun **dışında** durmalı.
+
+```bash
+# Sunucuda crontab -e — her gece 03:00 (sunucu saatiyle)
+0 3 * * * YEDEK_DATABASE_URL="postgresql://…" YEDEK_RCLONE_HEDEF="b2:tedarikci-yedek" /opt/tedarikci/scripts/yedek-al.sh >> /var/log/tedarikci-yedek.log 2>&1
+```
+
+- `scripts/yedek-al.sh`: `pg_dump` (özel biçim) + arşivin okunabildiği denetimi + `rclone` ile sunucu
+  dışına kopya (Backblaze B2, S3, Google Drive…; `rclone config` ile bir kez tanımlanır) + yerelde 14 gün saklama.
+- **Geri yükleme provası** (yayından önce en az bir kez, sonra düzenli aralıklarla):
+
+```bash
+PROVA_SUNUCU_URL="postgresql://…/postgres" KAYNAK_DATABASE_URL="postgresql://…/uretim_db" \
+  ./scripts/geri-yukleme-provasi.sh /var/backups/tedarikci/tedarikci-<tarih>.dump
+```
+
+  Yedeği geçici bir veritabanına yükler, tüm tabloları (kayıt sayısı + içerik özeti), tetikleyicileri ve
+  CHECK kısıtlarını kaynakla karşılaştırır, silme engelinin çalıştığını doğrular, geçici veritabanını kaldırır.
+
+### 5. Yayın sonrası kontrol
+
+- `https://…/robots.txt` → `Disallow: /`; sayfa başlıklarında `X-Robots-Tag: noindex`.
+- Oturumsuz `https://…/katalog` → giriş sayfasına yönlenir.
+- Alıcı, tedarikçi ve admin hesaplarıyla birer kez giriş; katalogda aksansız arama ("pecete").
+- Yedek betiğinin ilk gece çalıştığı ve dosyanın sunucu dışına ulaştığı.
+
+### Güncelleme
+
+Yeni sürüm: imajı yeniden derleyip konteyneri değiştirmek yeterli; migration'lar açılışta uygulanır.
+Migration'lar yalnız ileriye doğrudur; üretimde `prisma migrate reset` **asla** çalıştırılmaz.
