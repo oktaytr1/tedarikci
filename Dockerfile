@@ -22,7 +22,11 @@ ENV TZ=Europe/Istanbul
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=build /app/package.json /app/package-lock.json ./
 COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/.next ./.next
+# next.config.ts çalışma anında da gerekir: yoksa imaj cacheComponents (PPR) ile derlenip ayar
+# kapalı çalışır ve oturum okuyan her sayfa DYNAMIC_SERVER_USAGE ile 500 verir.
+COPY --from=build /app/next.config.ts ./next.config.ts
+# .next/cache çalışma anında yazılır: root olmayan kullanıcıya ait olmalı.
+COPY --from=build --chown=app:app /app/.next ./.next
 COPY --from=build /app/public ./public
 COPY --from=build /app/generated ./generated
 COPY --from=build /app/prisma ./prisma
