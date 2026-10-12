@@ -25,7 +25,8 @@ const temel: SiparisBaglami = {
   odemeler: [],
 };
 const b = (o: Partial<SiparisBaglami>): SiparisBaglami => ({ ...temel, ...o });
-const AKTORLER: GecisAktoru[] = ["admin", "tedarikci", "onay_baglantisi"];
+// "alici" (katalog kullanıcısı) hiçbir işleme yetkili değildir; matriste bu da doğrulanır.
+const AKTORLER: GecisAktoru[] = ["admin", "tedarikci", "alici", "onay_baglantisi"];
 
 describe("durum sırası", () => {
   it("tek yönlü beş durum", () => {

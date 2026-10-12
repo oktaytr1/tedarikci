@@ -5,8 +5,12 @@
 //
 // Kapsamlı istemci, Prisma istemcisinin yerine geçen bir sarmalayıcıdır:
 //   - Yalnız sekiz model temsilcisini açar; $queryRaw / $executeRaw / $transaction yoktur.
-//   - Tedarikçi: her sorguya firma filtresi zorla eklenir; ilişki gezintisi beyaz listeyle sınırlıdır
-//     (include/select/where/orderBy içinde başka firmaların verisine ulaşan ilişki reddedilir).
+//   - Tedarikçi ve alıcı: her sorguya rol filtresi zorla eklenir; ilişki gezintisi ve (bazı modellerde)
+//     alanlar beyaz listeyle sınırlıdır. include/select/where/orderBy/cursor içinde izinsiz ilişkiye
+//     ya da gizli alana uzanan sorgu reddedilir.
+//       Tedarikçi: yalnız kendi firmasının ürünleri (ve kendi siparişleri).
+//       Alıcı   : aktif tedarikçilerin aktif ürünleri + tedarikçilerin vitrin bilgisi (ünvan, adres,
+//                 telefon; vergi no gizli). Operasyon tabloları ve denetim kaydı kapalı. Salt okunur.
 //   - Yazma yalnız denetimli() içinde yapılır; her yazma aynı transaction'da denetim_kaydi'na düşer.
 //   - delete / deleteMany / upsert / createMany yoktur.
 
@@ -15,7 +19,8 @@ import { db, type DbTx } from "@/lib/db";
 
 export type Aktor =
   | { tip: "admin"; kullaniciId: number }
-  | { tip: "tedarikci"; kullaniciId: number; firmaId: number };
+  | { tip: "tedarikci"; kullaniciId: number; firmaId: number }
+  | { tip: "alici"; kullaniciId: number; firmaId: number };
 
 export class YetkiHatasi extends Error {
   constructor(mesaj: string) {
@@ -61,36 +66,109 @@ export const ILISKILER: Record<Model, Record<string, Model>> = {
   DenetimKaydi: { kullanici: "Kullanici" },
 };
 
-// Tedarikçinin gezebileceği ilişkiler. Kök sorgu kendi firmasına kısıtlı olduğundan bu
-// kenarlar yalnız kendi verisine (ya da kendi siparişinin alıcısının firma kartına) çıkar.
-// Firma ve Urun yapraktır: firmadan başka siparişlere, üründen başka satırlara geçilemez.
-const TEDARIKCI_ILISKI_IZNI: Partial<Record<Model, ReadonlySet<string>>> = {
-  Siparis: new Set(["alici", "satici", "satirlar", "odemeler"]),
-  SiparisSatir: new Set(["siparis", "urun"]),
-  Odeme: new Set(["siparis", "odeyen", "alan"]),
-  Kullanici: new Set(["firma"]),
-  Firma: new Set(),
-  Urun: new Set(),
+// ---------------------------------------------------------------------------
+// Rol kuralları (admin kısıtsızdır)
+// ---------------------------------------------------------------------------
+
+type YazmaIzni = { islemler: ReadonlySet<string>; alanlar: ReadonlySet<string> };
+
+type RolKurali = {
+  ad: string;
+  /** Kök sorguya eklenen zorunlu filtre; erişimi olmayan modelde hata fırlatır. */
+  filtre: (model: Model) => object;
+  /** Gezilebilecek ilişkiler. Listede olmayan ilişki include/select/where/orderBy içinde reddedilir. */
+  iliskiIzni: Partial<Record<Model, ReadonlySet<string>>>;
+  /**
+   * Alan beyaz listesi olan modeller: yalnız bu alanlar seçilebilir, filtrelenebilir, sıralanabilir.
+   * Seçim belirtilmezse bu alanlar seçilir; bu modellerde toplama (aggregate/groupBy) kapalıdır.
+   */
+  alanIzni: Partial<Record<Model, readonly string[]>>;
+  yazma: Partial<Record<Model, YazmaIzni>>;
 };
 
-// Tedarikçinin kök sorgusuna eklenen zorunlu filtre.
-function tedarikciFiltresi(model: Model, a: Extract<Aktor, { tip: "tedarikci" }>): object {
-  switch (model) {
-    case "Siparis":
-      return { satici_firma_id: a.firmaId };
-    case "SiparisSatir":
-    case "Odeme":
-      return { siparis: { satici_firma_id: a.firmaId } };
-    case "Urun":
-      return { firma_id: a.firmaId };
-    case "Kullanici":
-      return { id: a.kullaniciId };
-    case "Firma":
-      // Kendi firması + kendisine sipariş vermiş alıcıların firma kartı.
-      return { OR: [{ id: a.firmaId }, { alici_siparisler: { some: { satici_firma_id: a.firmaId } } }] };
-    default:
-      throw new YetkiHatasi(`Tedarikçi ${model} verisine erişemez.`);
-  }
+/** Kullanıcı kaydının rol sahibine görünen alanları (parola özeti hariç). */
+const KULLANICI_ALANLARI = ["id", "firma_id", "email", "rol", "aktif", "olusturma", "guncelleme"] as const;
+/** Alıcının tedarikçi firmalarda gördüğü vitrin alanları (vergi no gizli). */
+export const FIRMA_VITRIN_ALANLARI = ["id", "unvan", "adres", "telefon"] as const;
+
+const SATICI_TIPLERI = ["tedarikci", "her_ikisi"] as const;
+
+function tedarikciKurali(a: Extract<Aktor, { tip: "tedarikci" }>): RolKurali {
+  return {
+    ad: "Tedarikçi",
+    filtre(model) {
+      switch (model) {
+        case "Siparis":
+          return { satici_firma_id: a.firmaId };
+        case "SiparisSatir":
+        case "Odeme":
+          return { siparis: { satici_firma_id: a.firmaId } };
+        case "Urun":
+          return { firma_id: a.firmaId };
+        case "Kullanici":
+          return { id: a.kullaniciId };
+        case "Firma":
+          // Kendi firması + kendisine sipariş vermiş alıcıların firma kartı.
+          return { OR: [{ id: a.firmaId }, { alici_siparisler: { some: { satici_firma_id: a.firmaId } } }] };
+        default:
+          throw new YetkiHatasi(`Tedarikçi ${model} verisine erişemez.`);
+      }
+    },
+    // Kök sorgu kendi firmasına kısıtlı olduğundan bu kenarlar yalnız kendi verisine (ya da kendi
+    // siparişinin alıcısının firma kartına) çıkar. Firma ve Urun yapraktır.
+    iliskiIzni: {
+      Siparis: new Set(["alici", "satici", "satirlar", "odemeler"]),
+      SiparisSatir: new Set(["siparis", "urun"]),
+      Odeme: new Set(["siparis", "odeyen", "alan"]),
+      Kullanici: new Set(["firma"]),
+      Firma: new Set(),
+      Urun: new Set(),
+    },
+    alanIzni: { Kullanici: KULLANICI_ALANLARI },
+    // Durum geçiş kuralları lib/siparis-durum.ts'te ayrıca uygulanır.
+    yazma: {
+      Siparis: {
+        islemler: new Set(["update", "updateMany"]),
+        alanlar: new Set(["durum", "fatura_no", "fatura_tarihi", "fatura_tutar"]),
+      },
+    },
+  };
+}
+
+function aliciKurali(a: Extract<Aktor, { tip: "alici" }>): RolKurali {
+  const aktifTedarikci = { durum: "aktif", tip: { in: [...SATICI_TIPLERI] } };
+  return {
+    ad: "Alıcı",
+    filtre(model) {
+      switch (model) {
+        case "Urun":
+          // Pasif ürün de, pasif tedarikçinin aktif ürünü de katalogda görünmez.
+          return { aktif: true, firma: aktifTedarikci };
+        case "Firma":
+          return { OR: [{ id: a.firmaId }, aktifTedarikci] };
+        case "Kullanici":
+          return { id: a.kullaniciId };
+        default:
+          // Siparis, SiparisSatir, Odeme, Onay, DenetimKaydi
+          throw new YetkiHatasi(`Alıcı ${model} verisine erişemez.`);
+      }
+    },
+    // Ürün → firma (yaprak). Firma → urunler kapalı: iç içe include kök filtreyi atlar ve pasif
+    // ürünleri döndürürdü; katalog sorguları doğrudan Urun üzerinden yapılır.
+    iliskiIzni: {
+      Urun: new Set(["firma"]),
+      Kullanici: new Set(["firma"]),
+      Firma: new Set(),
+    },
+    alanIzni: { Firma: FIRMA_VITRIN_ALANLARI, Kullanici: KULLANICI_ALANLARI },
+    yazma: {},
+  };
+}
+
+function rolKurali(aktor: Aktor): RolKurali | null {
+  if (aktor.tip === "tedarikci") return tedarikciKurali(aktor);
+  if (aktor.tip === "alici") return aliciKurali(aktor);
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -109,14 +187,6 @@ const OKUMA = new Set([
 ]);
 const YAZMA = new Set(["create", "createManyAndReturn", "update", "updateMany"]);
 
-// Tedarikçinin yazabildiği tek model ve alanlar. Durum geçiş kuralları (bölüm 6) ayrıca uygulanır.
-const TEDARIKCI_YAZMA: Partial<Record<Model, { islemler: ReadonlySet<string>; alanlar: ReadonlySet<string> }>> = {
-  Siparis: {
-    islemler: new Set(["update", "updateMany"]),
-    alanlar: new Set(["durum", "fatura_no", "fatura_tarihi", "fatura_tutar"]),
-  },
-};
-
 // Onay bağlantısını admin üretir; ama yalnız bu alanlarla. Onayın kendisini (kullanildi_mi,
 // onay_zamani, onaylanan_*) yalnız alıcı onay servisi yazar; o servis bu katmanı kullanmaz.
 const ONAY_OLUSTURMA_ALANLARI = new Set(["siparis_id", "siparis", "token_hash", "son_gecerlilik"]);
@@ -129,74 +199,94 @@ type Nesne = Record<string, unknown>;
 const nesneMi = (x: unknown): x is Nesne =>
   typeof x === "object" && x !== null && !Array.isArray(x) && !(x instanceof Date);
 
-function iliskiIzinli(model: Model, alan: string): Model {
+function iliskiIzinli(k: RolKurali, model: Model, alan: string): Model {
   const hedef = ILISKILER[model][alan];
-  const izin = TEDARIKCI_ILISKI_IZNI[model];
-  if (!izin || !izin.has(alan)) {
-    throw new YetkiHatasi(`Tedarikçi ${model}.${alan} ilişkisine erişemez.`);
+  if (!k.iliskiIzni[model]?.has(alan)) {
+    throw new YetkiHatasi(`${k.ad} ${model}.${alan} ilişkisine erişemez.`);
   }
   return hedef;
 }
 
+/** Alan beyaz listesi olan modelde izinsiz alana (seçim, filtre, sıralama, cursor) erişimi reddeder. */
+function alanIzinli(k: RolKurali, model: Model, alan: string): void {
+  const izin = k.alanIzni[model];
+  if (izin && !izin.includes(alan)) throw new YetkiHatasi(`${k.ad} ${model}.${alan} alanına erişemez.`);
+}
+
 const ILISKI_FILTRELERI = ["some", "every", "none", "is", "isNot"];
 
-function whereDenetle(model: Model, where: unknown): void {
-  if (Array.isArray(where)) return where.forEach((w) => whereDenetle(model, w));
+function whereDenetle(k: RolKurali, model: Model, where: unknown): void {
+  if (Array.isArray(where)) return where.forEach((w) => whereDenetle(k, model, w));
   if (!nesneMi(where)) return;
-  for (const [k, v] of Object.entries(where)) {
-    if (k === "AND" || k === "OR" || k === "NOT") {
-      whereDenetle(model, v);
-    } else if (k in ILISKILER[model]) {
-      const hedef = iliskiIzinli(model, k);
+  for (const [alan, v] of Object.entries(where)) {
+    if (alan === "AND" || alan === "OR" || alan === "NOT") {
+      whereDenetle(k, model, v);
+    } else if (alan in ILISKILER[model]) {
+      const hedef = iliskiIzinli(k, model, alan);
       if (!nesneMi(v)) continue;
       const dogrudan: Nesne = {};
       for (const [fk, fv] of Object.entries(v)) {
-        if (ILISKI_FILTRELERI.includes(fk)) whereDenetle(hedef, fv);
+        if (ILISKI_FILTRELERI.includes(fk)) whereDenetle(k, hedef, fv);
         else dogrudan[fk] = fv;
       }
-      whereDenetle(hedef, dogrudan);
+      whereDenetle(k, hedef, dogrudan);
+    } else {
+      alanIzinli(k, model, alan);
     }
   }
 }
 
-function secimDenetle(model: Model, secim: unknown): void {
+function secimDenetle(k: RolKurali, model: Model, secim: unknown, tur: "select" | "include"): void {
   if (!nesneMi(secim)) return;
-  for (const [k, v] of Object.entries(secim)) {
-    if (k === "_count") {
-      if (v === true) throw new YetkiHatasi("Tedarikçi _count: true kullanamaz; sayılacak ilişkileri açıkça seçin.");
+  for (const [alan, v] of Object.entries(secim)) {
+    if (alan === "_count") {
+      if (v === true) throw new YetkiHatasi(`${k.ad} _count: true kullanamaz; sayılacak ilişkileri açıkça seçin.`);
       if (nesneMi(v)) {
-        if (v.select === true) throw new YetkiHatasi("Tedarikçi _count.select: true kullanamaz.");
+        if (v.select === true) throw new YetkiHatasi(`${k.ad} _count.select: true kullanamaz.`);
         if (nesneMi(v.select)) {
           for (const [ck, cv] of Object.entries(v.select)) {
-            const hedef = iliskiIzinli(model, ck);
-            if (nesneMi(cv)) whereDenetle(hedef, cv.where);
+            const hedef = iliskiIzinli(k, model, ck);
+            if (nesneMi(cv)) whereDenetle(k, hedef, cv.where);
           }
         }
       }
-    } else if (k in ILISKILER[model]) {
-      const hedef = iliskiIzinli(model, k);
-      if (nesneMi(v)) argsDenetle(hedef, v);
+    } else if (alan in ILISKILER[model]) {
+      const hedef = iliskiIzinli(k, model, alan);
+      // Alan kısıtlı modele iç içe erişimde alanlar açıkça seçilmeli (include: true tüm alanları getirirdi).
+      if (k.alanIzni[hedef] && !(nesneMi(v) && nesneMi(v.select))) {
+        throw new YetkiHatasi(`${k.ad} ${model}.${alan} için alanları select ile seçmeli.`);
+      }
+      if (nesneMi(v)) argsDenetle(k, hedef, v);
+    } else if (tur === "select") {
+      alanIzinli(k, model, alan);
     }
   }
 }
 
-function siralamaDenetle(model: Model, siralama: unknown): void {
-  if (Array.isArray(siralama)) return siralama.forEach((s) => siralamaDenetle(model, s));
+function siralamaDenetle(k: RolKurali, model: Model, siralama: unknown): void {
+  if (Array.isArray(siralama)) return siralama.forEach((s) => siralamaDenetle(k, model, s));
   if (!nesneMi(siralama)) return;
-  for (const [k, v] of Object.entries(siralama)) {
-    if (k in ILISKILER[model]) {
-      const hedef = iliskiIzinli(model, k);
-      siralamaDenetle(hedef, v);
+  for (const [alan, v] of Object.entries(siralama)) {
+    if (alan in ILISKILER[model]) {
+      siralamaDenetle(k, iliskiIzinli(k, model, alan), v);
+    } else if (alan !== "_count") {
+      alanIzinli(k, model, alan);
     }
   }
 }
 
-/** Tedarikçi sorgusundaki tüm ilişki gezintilerini beyaz listeye göre denetler. */
-function argsDenetle(model: Model, args: Nesne): void {
-  whereDenetle(model, args.where);
-  secimDenetle(model, args.include);
-  secimDenetle(model, args.select);
-  siralamaDenetle(model, args.orderBy);
+/** Rol sorgusundaki tüm ilişki gezintilerini ve kısıtlı alanları beyaz listeye göre denetler. */
+function argsDenetle(k: RolKurali, model: Model, args: Nesne): void {
+  if (k.alanIzni[model]) {
+    if (args.omit !== undefined) throw new YetkiHatasi(`${k.ad} ${model} sorgusunda omit yerine select kullanmalı.`);
+    if (nesneMi(args.cursor)) Object.keys(args.cursor).forEach((alan) => alanIzinli(k, model, alan));
+    const distinct = Array.isArray(args.distinct) ? args.distinct : args.distinct ? [args.distinct] : [];
+    distinct.forEach((alan) => alanIzinli(k, model, String(alan)));
+  }
+  whereDenetle(k, model, args.where);
+  secimDenetle(k, model, args.include, "include");
+  secimDenetle(k, model, args.select, "select");
+  siralamaDenetle(k, model, args.orderBy);
 }
 
 // Yazma verisindeki iç içe (nested) işlemler: Onay ve denetim kaydına dolaylı yazma ve
@@ -413,17 +503,31 @@ function islemCalistir(
   }
   if (yazma) veriDenetle(model, args.data);
 
-  if (aktor.tip === "tedarikci") {
+  const k = rolKurali(aktor);
+  if (k) {
     if (yazma) {
-      const izin = TEDARIKCI_YAZMA[model];
-      if (!izin || !izin.islemler.has(islem)) throw new YetkiHatasi(`Tedarikçi ${model}.${islem} yapamaz.`);
+      const izin = k.yazma[model];
+      if (!izin || !izin.islemler.has(islem)) throw new YetkiHatasi(`${k.ad} ${model}.${islem} yapamaz.`);
       const veri = nesneMi(args.data) ? args.data : {};
       for (const alan of Object.keys(veri)) {
-        if (!izin.alanlar.has(alan)) throw new YetkiHatasi(`Tedarikçi ${model}.${alan} alanını değiştiremez.`);
+        if (!izin.alanlar.has(alan)) throw new YetkiHatasi(`${k.ad} ${model}.${alan} alanını değiştiremez.`);
       }
     }
-    const filtre = tedarikciFiltresi(model, aktor); // erişimi olmayan modelde hata fırlatır
-    argsDenetle(model, args);
+    const filtre = k.filtre(model); // erişimi olmayan modelde hata fırlatır
+    const alanlar = k.alanIzni[model];
+    if (alanlar) {
+      // Kısıtlı modelde toplama ve sayım seçimi gizli alanın değerini dolaylı ele verebilir.
+      if (islem === "aggregate" || islem === "groupBy") throw new YetkiHatasi(`${k.ad} ${model} üzerinde ${islem} yapamaz.`);
+      if (islem === "count" && args.select !== undefined) throw new YetkiHatasi(`${k.ad} ${model} sayımında select kullanamaz.`);
+      // Seçim yoksa yalnız izinli alanlar döner; include tek başına tüm alanları getireceği için select istenir.
+      if (args.include !== undefined && args.select === undefined) {
+        throw new YetkiHatasi(`${k.ad} ${model} sorgusunda include yerine select kullanmalı.`);
+      }
+      if (args.select === undefined && islem !== "count") {
+        args = { ...args, select: Object.fromEntries(alanlar.map((a) => [a, true])) };
+      }
+    }
+    argsDenetle(k, model, args);
     args = { ...args, where: filtreEkle(args.where, filtre) };
   }
 

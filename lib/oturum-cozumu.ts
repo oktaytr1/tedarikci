@@ -12,8 +12,9 @@ export async function aktorCoz(kullaniciId: number): Promise<Aktor | null> {
   });
   if (!k || !k.aktif) return null;
   if (k.rol === "admin") return { tip: "admin", kullaniciId: k.id };
-  if (k.rol === "tedarikci" && k.firma_id !== null && k.firma?.durum === "aktif") {
-    return { tip: "tedarikci", kullaniciId: k.id, firmaId: k.firma_id };
-  }
+  // Tedarikçi ve alıcı: firması aktif olmalı (firma pasife alınınca tüm kullanıcılarının erişimi kesilir).
+  if (k.firma_id === null || k.firma?.durum !== "aktif") return null;
+  if (k.rol === "tedarikci") return { tip: "tedarikci", kullaniciId: k.id, firmaId: k.firma_id };
+  if (k.rol === "alici") return { tip: "alici", kullaniciId: k.id, firmaId: k.firma_id };
   return null;
 }

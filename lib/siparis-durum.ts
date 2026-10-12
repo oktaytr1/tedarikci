@@ -32,8 +32,11 @@ export const DURUM_ETIKETI: Record<SiparisDurum, string> = {
   odendi: "Ödendi",
 };
 
-/** Geçişi yapan taraf. "onay_baglantisi" oturumsuz alıcı onay sayfasıdır (bölüm 5). */
-export type GecisAktoru = "admin" | "tedarikci" | "onay_baglantisi";
+/**
+ * Geçişi yapan taraf. "onay_baglantisi" alıcının imzalı onay bağlantısıdır (operasyon akışı açılınca).
+ * "alici" katalog sürümündeki oturumlu alıcı kullanıcısıdır: hiçbir operasyon işlemine yetkisi yoktur.
+ */
+export type GecisAktoru = "admin" | "tedarikci" | "alici" | "onay_baglantisi";
 
 export type SiparisBaglami = {
   durum: SiparisDurum;
