@@ -1,18 +1,16 @@
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { rolGerekli } from "@/lib/authz";
 
-// Yer tutucu: Admin ekranları (task1.md bölüm 3) ayrıca yapılacak.
-// Kural: rol kontrolü düzende DEĞİL her sayfada yapılır. Düzen (layout) ve sayfa ayrı render
-// edilir; düzendeki kontrol sayfanın önceden render edilen (prerender) kısmını durdurmaz.
-export default function Sayfa() {
+export default function AdminAnaSayfa() {
   return (
     <Suspense fallback={null}>
-      <Icerik />
+      <Yonlendir />
     </Suspense>
   );
 }
 
-async function Icerik() {
+async function Yonlendir(): Promise<null> {
   await rolGerekli("admin");
-  return <p className="text-sm text-muted-foreground">Admin ekranı henüz yapılmadı.</p>;
+  redirect("/admin/urunler");
 }

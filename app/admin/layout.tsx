@@ -14,7 +14,15 @@ export default function AdminDuzeni({ children }: { children: React.ReactNode })
 async function Korumali({ children }: { children: React.ReactNode }) {
   const aktor = await rolGerekli("admin");
   return (
-    <PanelKabugu aktor={aktor} baslik="Admin paneli">
+    <PanelKabugu
+      aktor={aktor}
+      baslik="Admin paneli"
+      menu={[
+        { href: "/admin/urunler", etiket: "Ürünler" },
+        { href: "/admin/firmalar", etiket: "Firmalar" },
+        { href: "/admin/kullanicilar", etiket: "Kullanıcılar" },
+      ]}
+    >
       {children}
     </PanelKabugu>
   );
