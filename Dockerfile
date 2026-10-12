@@ -1,0 +1,33 @@
+# Üretim imajı: derleme ayrı aşamada, çalışma `next start` ile.
+FROM node:24-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+# postinstall (prisma generate) şema gelmeden çalışamaz; generate derleme aşamasında yapılır.
+RUN npm ci --ignore-scripts
+
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# Derleme sırasında veritabanına bağlanılmaz; adres yalnız modüllerin yüklenebilmesi için.
+# Bu değer çalışma imajına geçmez, gerçek adres çalışma anında verilir.
+ARG DATABASE_URL=postgresql://derleme:derleme@localhost:5432/derleme
+RUN npx prisma generate && npm run build
+
+FROM node:24-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV TZ=Europe/Istanbul
+RUN addgroup -S app && adduser -S app -G app
+COPY --from=build /app/package.json /app/package-lock.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY --from=build /app/generated ./generated
+COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/prisma.config.ts ./prisma.config.ts
+USER app
+EXPOSE 3000
+# Önce bekleyen migration'lar uygulanır, sonra uygulama başlar.
+CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
