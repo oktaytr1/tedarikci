@@ -96,6 +96,15 @@ describe.skipIf(!VT_VAR)("kapsam katmanı (veritabanı)", () => {
 
   const oku = (a: Aktor): KapsamliDb => cekirdek.kapsamliDbAktorle(a);
 
+  // Onay bağlantısı yalnız "sevk edildi" siparişe üretilir: siparişi oraya taşır.
+  const sevkEdilmisYap = async (siparisId: number) => {
+    await ham.siparis.update({ where: { id: siparisId }, data: { durum: "tedarikci_onayladi" } });
+    await ham.siparis.update({
+      where: { id: siparisId },
+      data: { durum: "sevk_edildi", fatura_no: `F-${siparisId}`, fatura_tutar: "12.00" },
+    });
+  };
+
   describe("tedarikçi kendi firma_id'si dışına çıkamaz", () => {
     it("sipariş listesinde yalnız kendi siparişleri", async () => {
       const liste = await oku(tedA).siparis.findMany();
@@ -243,6 +252,7 @@ describe.skipIf(!VT_VAR)("kapsam katmanı (veritabanı)", () => {
         ),
       ).rejects.toThrow(cekirdek.YetkiHatasi);
       // Bağlantı kaydı (kullanılmamış) oluşturulabilir; güncellenemez.
+      await sevkEdilmisYap(id.sipA);
       const onay = await cekirdek.denetimliAktorle(admin, "onay.baglanti_uret", (vt) =>
         vt.onay.create({ data: { siparis_id: id.sipA, token_hash: "h3", son_gecerlilik: gelecek } }),
       );
@@ -368,6 +378,7 @@ describe.skipIf(!VT_VAR)("kapsam katmanı (veritabanı)", () => {
     });
 
     it("kullanılmış onay kaydı değiştirilemez", async () => {
+      await sevkEdilmisYap(id.sipA);
       const o = await ham.onay.create({
         data: { siparis_id: id.sipA, token_hash: "t1", son_gecerlilik: new Date(Date.now() + 86_400_000) },
       });
@@ -387,9 +398,18 @@ describe.skipIf(!VT_VAR)("kapsam katmanı (veritabanı)", () => {
       birim_fiyat: "10.00", kdv_orani: "20.00", kdv_tutar: "4.00", satir_toplam: "20.00",
     });
 
-    it("girildi iken satır eklenir ve iptal edilir", async () => {
-      const yeni = await ham.siparisSatir.create({ data: satir(id.sipA) });
-      const iptal = await ham.siparisSatir.update({ where: { id: yeni.id }, data: { iptal_mi: true } });
+    it("girildi iken satır eklenir ve iptal edilir (toplamlarla birlikte)", async () => {
+      // Satır +20,00 / KDV +4,00 → sipariş 30,00 / 6,00 / 36,00 ; iptalle 10,00 / 2,00 / 12,00
+      const yeni = await ham.$transaction(async (tx) => {
+        const r = await tx.siparisSatir.create({ data: satir(id.sipA) });
+        await tx.siparis.update({ where: { id: id.sipA }, data: { ara_toplam: "30.00", kdv_toplam: "6.00", genel_toplam: "36.00" } });
+        return r;
+      });
+      const iptal = await ham.$transaction(async (tx) => {
+        const r = await tx.siparisSatir.update({ where: { id: yeni.id }, data: { iptal_mi: true } });
+        await tx.siparis.update({ where: { id: id.sipA }, data: { ara_toplam: "10.00", kdv_toplam: "2.00", genel_toplam: "12.00" } });
+        return r;
+      });
       expect(iptal.iptal_mi).toBe(true);
     });
 
@@ -417,6 +437,8 @@ describe.skipIf(!VT_VAR)("kapsam katmanı (veritabanı)", () => {
       cekirdek.denetimliAktorle(admin, "onay.baglanti_uret", (vt) =>
         vt.onay.create({ data: { siparis_id: id.sipA, token_hash: token, son_gecerlilik: gelecek() } }),
       );
+    beforeEach(() => sevkEdilmisYap(id.sipA));
+
     const kullan = (onayId: number) =>
       ham.onay.update({
         where: { id: onayId },
@@ -464,12 +486,25 @@ describe.skipIf(!VT_VAR)("kapsam katmanı (veritabanı)", () => {
           token,
         ]);
       try {
+        const c2pid = (await c2.query("SELECT pg_backend_pid() AS pid")).rows[0].pid as number;
         await c1.query("BEGIN");
         await c2.query("BEGIN");
-        await ekle(c1, "es-1"); // c1 henüz commit etmedi: c2 eski bağlantıyı göremez
-        const ikinci = ekle(c2, "es-2"); // tekil indekste c1'i bekler
+        await ekle(c1, "es-1"); // c1 henüz commit etmedi: c2'nin tetikleyicisi bu bağlantıyı göremez
+        const ikinci = ekle(c2, "es-2").then(
+          () => null,
+          (e: Error) => e,
+        );
+        // c2 gerçekten tekil indekste c1'i beklemeye başlamadan c1 commit edilmez;
+        // aksi hâlde c2 sıralı çalışır ve c1'i geçersiz kılıp sorunsuz eklenir (o da doğru sonuçtur).
+        const bitis = Date.now() + 3000;
+        for (;;) {
+          const r = await c1.query("SELECT wait_event_type FROM pg_stat_activity WHERE pid = $1", [c2pid]);
+          if (r.rows[0]?.wait_event_type === "Lock") break;
+          if (Date.now() > bitis) throw new Error("c2 kilit beklemesine girmedi");
+          await new Promise((coz) => setTimeout(coz, 20));
+        }
         await c1.query("COMMIT");
-        await expect(ikinci).rejects.toThrow(/onay_siparis_tek_gecerli/);
+        expect((await ikinci)?.message).toMatch(/onay_siparis_tek_gecerli/);
         await c2.query("ROLLBACK");
       } finally {
         await Promise.all([c1.end(), c2.end()]);

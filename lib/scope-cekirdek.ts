@@ -466,16 +466,16 @@ export function kapsamliDbAktorle(aktor: Aktor): KapsamliDb {
  * Yazma yapılan tek yol: tek transaction, kapsamlı istemci ve otomatik denetim kaydı.
  * `fn` hata fırlatırsa yazmalar da denetim kayıtları da geri alınır.
  */
-export async function denetimliAktorle<T>(
-  aktor: Aktor,
+export async function denetimliAktorle<T, A extends Aktor = Aktor>(
+  aktor: A,
   islem: string,
-  fn: (vt: KapsamliDb) => Promise<T>,
+  fn: (vt: KapsamliDb, aktor: A) => Promise<T>,
   secenek: { ip?: string | null } = {},
 ): Promise<T> {
   if (!islem.trim()) throw new Error("denetimli(): işlem adı zorunlu.");
   return db.$transaction(async (tx) => {
     const baglam: DenetimBaglami = { tx: tx as DbTx, islem, ip: secenek.ip, kayitlar: [] };
-    const sonuc = await fn(kapsamla(tx as DbTx, aktor, baglam));
+    const sonuc = await fn(kapsamla(tx as DbTx, aktor, baglam), aktor);
     if (baglam.kayitlar.length) await tx.denetimKaydi.createMany({ data: baglam.kayitlar });
     return sonuc;
   });

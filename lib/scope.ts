@@ -8,17 +8,25 @@
 import "server-only";
 import { headers } from "next/headers";
 import { aktorGerekli } from "@/lib/authz";
-import { denetimliAktorle, kapsamliDbAktorle, type KapsamliDb } from "@/lib/scope-cekirdek";
+import { denetimliAktorle, kapsamliDbAktorle, type Aktor, type KapsamliDb } from "@/lib/scope-cekirdek";
 
-export type { KapsamliDb } from "@/lib/scope-cekirdek";
+export type { Aktor, KapsamliDb } from "@/lib/scope-cekirdek";
 export { YetkiHatasi } from "@/lib/scope-cekirdek";
 
-export async function kapsamliDb(): Promise<KapsamliDb> {
-  return kapsamliDbAktorle(await aktorGerekli());
+export async function kapsamliDb(...roller: Aktor["tip"][]): Promise<KapsamliDb> {
+  return kapsamliDbAktorle(await aktorGerekli(...roller));
 }
 
-export async function denetimli<T>(islem: string, fn: (vt: KapsamliDb) => Promise<T>): Promise<T> {
-  const aktor = await aktorGerekli();
+/**
+ * Yazma kapısı. `roller` verilirse aktör bu rollerden biri olmalı (ör. yalnız admin işlemleri).
+ * `fn` aktörü de alır; durum kuralları aktörün rolüne göre karar verir.
+ */
+export async function denetimli<T, R extends Aktor["tip"] = Aktor["tip"]>(
+  islem: string,
+  fn: (vt: KapsamliDb, aktor: Extract<Aktor, { tip: R }>) => Promise<T>,
+  roller: R[] = [],
+): Promise<T> {
+  const aktor = await aktorGerekli(...roller);
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
   return denetimliAktorle(aktor, islem, fn, { ip });

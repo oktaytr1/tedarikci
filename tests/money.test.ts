@@ -8,6 +8,11 @@ import {
   dbPara,
   faturaTutarUyusuyorMu,
   komisyonHesapla,
+  miktarOku,
+  miktarYaz,
+  odemeDurumu,
+  oranOku,
+  paraGirdiYaz,
   paraOku,
   paraYaz,
   satirHesapla,
@@ -239,5 +244,48 @@ describe("fatura tutarı karşılaştırması", () => {
     expect(faturaTutarUyusuyorMu("11729.3", "11729.30")).toBe(true);
     expect(faturaTutarUyusuyorMu("11729.35", "11729.36")).toBe(false);
     expect(faturaTutarUyusuyorMu(null, "11729.36")).toBe(true);
+  });
+});
+
+describe("Türkçe miktar ve oran girişi", () => {
+  it("miktar", () => {
+    expect(dbMiktar(miktarOku("2,5", "kg"), "kg")).toBe("2.500");
+    expect(dbMiktar(miktarOku("1.250", "adet"), "adet")).toBe("1250.000");
+    expect(() => miktarOku("2,5", "adet")).toThrow(ParaHatasi);
+    expect(() => miktarOku("1,2345", "kg")).toThrow(ParaHatasi);
+    expect(() => miktarOku("", "kg")).toThrow(ParaHatasi);
+    expect(miktarYaz("1250.000")).toBe("1.250");
+    expect(miktarYaz("2.500")).toBe("2,5");
+  });
+
+  it("oran: boş ile sıfır farklı", () => {
+    expect(() => oranOku("")).toThrow(/boş bırakılamaz/);
+    expect(dbPara(oranOku("0"))).toBe("0.00");
+    expect(dbPara(oranOku("2,5"))).toBe("2.50");
+    expect(() => oranOku("2.5")).toThrow(ParaHatasi);
+  });
+
+  it("düzenleme alanı biçimi", () => {
+    expect(paraGirdiYaz("1234.5")).toBe("1234,50");
+  });
+});
+
+describe("ödeme durumu", () => {
+  it("kısmi ödeme, fatura tutarı esas", () => {
+    // fatura 11.729,36 ; ödemeler 5.000 + 6.000 (+ iptal 729,36) → ödenen 11.000 ; kalan 729,36
+    const r = odemeDurumu(
+      [{ tutar: "5000.00" }, { tutar: "6000.00" }, { tutar: "729.36", iptal_mi: true }],
+      "11729.36",
+      "11729.40",
+    );
+    expect(s2(r.odenen)).toBe("11000.00");
+    expect(s2(r.kalan)).toBe("729.36");
+    expect(r.karsiliyor).toBe(false);
+  });
+
+  it("fatura tutarı yoksa genel toplam esas; tam ödeme karşılar", () => {
+    const r = odemeDurumu([{ tutar: "70.92" }], null, "70.92");
+    expect(s2(r.kalan)).toBe("0.00");
+    expect(r.karsiliyor).toBe(true);
   });
 });

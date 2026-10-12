@@ -85,6 +85,16 @@ export function miktar(x: Sayi, birim: string): Decimal {
   return v;
 }
 
+/** Miktar karşılaştırması: a < b → -1, eşit → 0, a > b → 1. */
+export function miktarKarsilastir(a: Sayi, b: Sayi): number {
+  return d(a).comparedTo(d(b));
+}
+
+/** Miktar koli adedinin tam katı mı? (Uyarı içindir, engellemez.) */
+export function koliKatiMi(adet: Sayi, koliAdedi: number): boolean {
+  return d(adet).mod(koliAdedi).isZero();
+}
+
 export function birimTamsayiMi(birim: string): boolean {
   return birim.trim().toLocaleLowerCase("tr-TR") === "adet";
 }
@@ -175,6 +185,32 @@ export function esitMi(a: Sayi, b: Sayi): boolean {
   return d(a).eq(d(b));
 }
 
+/** Para değerlerinin toplamı (ör. ödemeler). */
+export function toplamla(degerler: ReadonlyArray<Sayi>): Decimal {
+  let t = new Decimal(0);
+  for (const v of degerler) t = t.plus(para(v));
+  return paraSiniri(t, "Toplam");
+}
+
+/** Siparişin ödenmesi gereken tutar: fatura tutarı varsa o, yoksa genel toplam. */
+export function odenecekTutar(faturaTutar: Sayi | null | undefined, genelToplam: Sayi): Decimal {
+  return para(faturaTutar ?? genelToplam);
+}
+
+export type OdemeDurumu = { odenecek: Decimal; odenen: Decimal; kalan: Decimal; karsiliyor: boolean };
+
+/** İptal edilmemiş ödemelerin toplamı ödenecek tutarı karşılıyor mu? (Fazla ödeme: kalan negatif.) */
+export function odemeDurumu(
+  odemeler: ReadonlyArray<{ tutar: Sayi; iptal_mi?: boolean }>,
+  faturaTutar: Sayi | null | undefined,
+  genelToplam: Sayi,
+): OdemeDurumu {
+  const odenecek = odenecekTutar(faturaTutar, genelToplam);
+  const odenen = toplamla(odemeler.filter((o) => !o.iptal_mi).map((o) => o.tutar));
+  const kalan = odenecek.minus(odenen);
+  return { odenecek, odenen, kalan, karsiliyor: !kalan.isPositive() || kalan.isZero() };
+}
+
 // ---------------------------------------------------------------------------
 // Veritabanı ve arayüz dönüşümleri
 // ---------------------------------------------------------------------------
@@ -191,6 +227,40 @@ export function dbMiktar(x: Sayi, birim: string): string {
 
 export function dbOran(x: Sayi): string {
   return oran(x).toFixed(2);
+}
+
+const TR_MIKTAR = /^\d{1,3}(\.\d{3})*(,\d{1,3})?$|^\d+(,\d{1,3})?$/;
+
+/** Türkçe biçimli miktar: "2,5", "1.250", "0,333". Birim "adet" ise tamsayı olmalı. */
+export function miktarOku(girdi: string, birim: string): Decimal {
+  const s = girdi.trim().replace(/\s/g, "");
+  if (!TR_MIKTAR.test(s)) throw new ParaHatasi(`Miktar biçimi geçersiz: "${girdi}" (ör. 2,5)`);
+  return miktar(s.replace(/\./g, "").replace(",", "."), birim);
+}
+
+/** Oran girişi: "20", "2,5". Boş girdi hatadır (sıfır ayrıca "0" olarak girilir). */
+export function oranOku(girdi: string): Decimal {
+  const s = girdi.trim();
+  if (s === "") throw new ParaHatasi("Oran boş bırakılamaz (sıfır için 0 girin).");
+  if (!/^\d{1,3}(,\d{1,2})?$/.test(s)) throw new ParaHatasi(`Oran biçimi geçersiz: "${girdi}" (ör. 2,5)`);
+  return oran(s.replace(",", "."));
+}
+
+/** Miktar gösterimi: "2,5", "1.250" (gereksiz sıfırlar atılır). */
+export function miktarYaz(x: Sayi): string {
+  const v = d(x);
+  const [tam, ondalik] = v.abs().toFixed().split(".");
+  return `${BigInt(tam).toLocaleString("tr-TR")}${ondalik ? "," + ondalik : ""}`;
+}
+
+/** Oran gösterimi: "20", "2,5". */
+export function oranYaz(x: Sayi): string {
+  return d(x).toFixed().replace(".", ",");
+}
+
+/** Arayüz alanına yazılacak para metni: "1234,50" (binlik ayırıcısız, düzenlemeye uygun). */
+export function paraGirdiYaz(x: Sayi): string {
+  return para(x).toFixed(PARA_HANE).replace(".", ",");
 }
 
 const TR_PARA = /^-?\d{1,3}(\.\d{3})*(,\d{1,2})?$|^-?\d+(,\d{1,2})?$/;
