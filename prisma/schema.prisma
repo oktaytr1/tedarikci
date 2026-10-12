@@ -32,6 +32,7 @@ enum FirmaDurum {
 enum Rol {
   admin
   tedarikci
+  alici
 
   @@map("rol")
 }
@@ -85,7 +86,7 @@ model Firma {
 
 model Kullanici {
   id          Int      @id @default(autoincrement())
-  // Admin bir firmaya bağlı değildir; rol = tedarikci ise CHECK ile zorunlu.
+  // Admin firmasızdır (NULL); tedarikçi ve alıcı için firma zorunlu (CHECK).
   firma_id    Int?
   email       String   @unique
   parola_hash String
@@ -94,7 +95,7 @@ model Kullanici {
   olusturma   DateTime @default(now()) @db.Timestamptz(3)
   guncelleme  DateTime @updatedAt @db.Timestamptz(3)
 
-  firma           Firma?          @relation(fields: [firma_id], references: [id])
+  firma             Firma?         @relation(fields: [firma_id], references: [id])
   denetim_kayitlari DenetimKaydi[]
 
   @@index([firma_id])
@@ -102,62 +103,68 @@ model Kullanici {
 }
 
 model Urun {
-  id          Int      @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   // Satıcı firma.
-  firma_id    Int
-  kod         String
-  ad          String
-  birim       String
-  koli_adedi  Int?
-  min_siparis Decimal? @db.Decimal(18, 3)
-  liste_fiyat Decimal  @db.Decimal(18, 2) // KDV hariç
-  kdv_orani   Decimal  @db.Decimal(5, 2) // yüzde, ör. 20.00
+  firma_id     Int
+  kod          String
+  ad           String
+  // Katalog alanları: teknik açıklama, serbest metin kategori (filtre buna dayanır),
+  // dışarıdan tek fotoğraf linki (yalnız https, en fazla 2000 karakter; yükleme yok).
+  aciklama     String?
+  kategori     String?
+  fotograf_url String?
+  birim        String
+  koli_adedi   Int?
+  min_siparis  Decimal? @db.Decimal(18, 3)
+  liste_fiyat  Decimal  @db.Decimal(18, 2) // KDV hariç
+  kdv_orani    Decimal  @db.Decimal(5, 2) // yüzde, ör. 20.00
   // Pasif ürün yeni siparişte seçilemez; geçmiş siparişlerde görünmeye devam eder.
-  aktif       Boolean  @default(true)
-  olusturma   DateTime @default(now()) @db.Timestamptz(3)
-  guncelleme  DateTime @updatedAt @db.Timestamptz(3)
+  aktif        Boolean  @default(true)
+  olusturma    DateTime @default(now()) @db.Timestamptz(3)
+  guncelleme   DateTime @updatedAt @db.Timestamptz(3)
 
-  firma            Firma          @relation(fields: [firma_id], references: [id])
+  firma             Firma          @relation(fields: [firma_id], references: [id])
   siparis_satirlari SiparisSatir[]
 
   @@unique([firma_id, kod])
+  @@index([kategori])
   @@map("urun")
 }
 
 model Siparis {
-  id             Int          @id @default(autoincrement())
-  alici_firma_id Int
+  id              Int          @id @default(autoincrement())
+  alici_firma_id  Int
   satici_firma_id Int
-  tarih          DateTime     @default(dbgenerated("CURRENT_DATE")) @db.Date
-  odeme_tipi     OdemeTipi
-  vade_gun       Int?
-  vade_tarihi    DateTime?    @db.Date
-  durum          SiparisDurum @default(girildi)
+  tarih           DateTime     @default(dbgenerated("CURRENT_DATE")) @db.Date
+  odeme_tipi      OdemeTipi
+  vade_gun        Int?
+  vade_tarihi     DateTime?    @db.Date
+  durum           SiparisDurum @default(girildi)
 
   // Toplamlar satırlardan lib/money.ts ile türetilir (KDV hariç ara toplam).
-  ara_toplam     Decimal      @db.Decimal(18, 2)
-  kdv_toplam     Decimal      @db.Decimal(18, 2)
-  genel_toplam   Decimal      @db.Decimal(18, 2)
+  ara_toplam     Decimal @db.Decimal(18, 2)
+  kdv_toplam     Decimal @db.Decimal(18, 2)
+  genel_toplam   Decimal @db.Decimal(18, 2)
   // Platform komisyonu faturanın parçası değildir; matrah ara_toplam.
-  komisyon_oran  Decimal      @db.Decimal(5, 2)
-  komisyon_tutar Decimal      @db.Decimal(18, 2)
+  komisyon_oran  Decimal @db.Decimal(5, 2)
+  komisyon_tutar Decimal @db.Decimal(18, 2)
 
   // Tedarikçinin alıcıya kestiği tek fatura.
-  fatura_no      String?
-  fatura_tarihi  DateTime?    @db.Date
+  fatura_no     String?
+  fatura_tarihi DateTime? @db.Date
   // Elle girilen fatura tutarı; genel_toplam ile tutmazsa engellenmez, işaretlenir
   // (bkz. lib/money.ts faturaTutarUyusuyorMu).
-  fatura_tutar   Decimal?     @db.Decimal(18, 2)
+  fatura_tutar  Decimal?  @db.Decimal(18, 2)
 
   // Ödeme bildirimi girildiğinde (durum = odendi) doldurulur.
-  odeme_tarihi   DateTime?    @db.Date
+  odeme_tarihi DateTime? @db.Date
 
-  iptal_mi       Boolean      @default(false)
-  iptal_nedeni   String?
-  iptal_zamani   DateTime?    @db.Timestamptz(3)
+  iptal_mi     Boolean   @default(false)
+  iptal_nedeni String?
+  iptal_zamani DateTime? @db.Timestamptz(3)
 
-  olusturma      DateTime     @default(now()) @db.Timestamptz(3)
-  guncelleme     DateTime     @updatedAt @db.Timestamptz(3)
+  olusturma  DateTime @default(now()) @db.Timestamptz(3)
+  guncelleme DateTime @updatedAt @db.Timestamptz(3)
 
   alici    Firma          @relation("AliciSiparis", fields: [alici_firma_id], references: [id])
   satici   Firma          @relation("SaticiSiparis", fields: [satici_firma_id], references: [id])
