@@ -37,7 +37,7 @@ export function NasilCalisir() {
             </div>
 
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Market veya işletme ürününü seçer. Nakit akışını korumak için <strong>30, 60, 90 veya 180 gün vadeli</strong> alım talep eder. Kasadan peşin para çıkmaz.
+              Market veya işletme ürününü seçer. Nakit akışını korumak için <strong>ticari anlaşmaya göre 30 günden 180 güne kadar</strong> vadeli alım talep eder. Kasadan peşin para çıkmaz.
             </p>
           </div>
 

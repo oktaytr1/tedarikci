@@ -17,18 +17,18 @@ export function KatalogHero() {
         {/* Ana Başlık ve Net Değer Önerisi */}
         <div className="max-w-3xl space-y-3">
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl leading-tight">
-            Alıcıya <span className="text-emerald-400">180 Güne Varan Vade</span>, <br className="hidden sm:inline" />
+            Alıcıya <span className="text-emerald-400">Anlaşmaya Göre Esnek Vade</span>, <br className="hidden sm:inline" />
             Üreticiye <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 bg-clip-text text-transparent">Anında Peşin Nakit</span>
           </h1>
           <p className="text-sm text-zinc-300 sm:text-base leading-relaxed max-w-2xl">
-            Marketler nakit akışını koruyarak vadeli mal alsın; fabrikalar 6 ay beklemeden fatura bedelini teslimatta peşin tahsil etsin. Türkiye&apos;nin finansman destekli toptan ürün kataloğu.
+            Marketler ticari anlaşmaya ve firma limitine göre 30 günden 180 güne varan esnek vadelerle mal alsın; fabrikalar vade beklemeden fatura bedelini teslimatta peşin tahsil etsin. Finansman ve faktoring destekli toptan ürün pazarı.
           </p>
         </div>
 
         {/* 2 Temel Kitle Çağrısı (WhatsApp Doğrudan Bağlantılı) */}
         <div className="flex flex-wrap items-center gap-3 pt-1">
           <a
-            href="https://wa.me/908503000000?text=Merhaba,%20tedarikcim.net.tr%20üzerinden%20vadeli%20mal%20alımı%20hakkında%20bilgi%20almak%20istiyorum."
+            href="https://wa.me/908503000000?text=Merhaba,%20tedarikcim.net.tr%20üzerinden%20anlaşmaya%20göre%20vadeli%20mal%20alımı%20hakkında%20bilgi%20almak%20istiyorum."
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-500 px-5 text-xs font-bold text-zinc-950 shadow-md transition-all hover:bg-emerald-400 active:scale-95"
@@ -56,8 +56,8 @@ export function KatalogHero() {
               <CalendarClock className="size-4" />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="font-semibold text-white">30 - 180 Gün Vade</span>
-              <span className="text-[11px] text-zinc-400">Alıcı için nakit koruma</span>
+              <span className="font-semibold text-white">Anlaşmaya Göre Vade</span>
+              <span className="text-[11px] text-zinc-400">30 - 180 güne kadar esnek</span>
             </div>
           </div>
 

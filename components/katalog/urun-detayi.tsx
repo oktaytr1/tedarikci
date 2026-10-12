@@ -99,7 +99,7 @@ export function UrunDetayi({
                   <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
                     Tedarikçi Finansmanı & Vadeli Alım
                   </h2>
-                  <span className="text-[11px] text-muted-foreground">30 - 180 Güne Varan Vade İmkanı</span>
+                  <span className="text-[11px] text-muted-foreground">Ticari Anlaşmaya Göre Esnek Vade (180 Güne Kadar)</span>
                 </div>
               </div>
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
@@ -123,7 +123,7 @@ export function UrunDetayi({
             </div>
 
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              Marketler ve perakende alıcılar için vadeli ödeme kolaylığı. Mal teslimi teyit edildiğinde üreticinin fatura bedeli finansman ortaklığıyla peşin ödenir.
+              Marketler ve toptan alıcılar için vadeli alım seçeneği. <strong>Vade süresi (30 - 180 gün), firmanızla yapılacak ticari anlaşmaya ve limite göre belirlenir.</strong> Mal teslimi teyit edildiğinde üretici faturasını finansman ortaklığıyla peşin tahsil eder.
             </p>
           </div>
 

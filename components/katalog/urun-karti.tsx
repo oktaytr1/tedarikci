@@ -71,7 +71,7 @@ export function UrunKarti({
         {/* Tedarikçi Finansmanı & Vade Rozeti */}
         <div className="flex items-center gap-1.5 rounded-lg bg-emerald-50/80 px-2 py-1 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
           <CalendarClock className="size-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
-          <span>30 - 180 Gün Vadeli Alım İmkanı</span>
+          <span>Anlaşmaya Göre Esnek Vade</span>
         </div>
 
         {/* Fiyat Bloğu */}

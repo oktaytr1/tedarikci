@@ -24,7 +24,7 @@ function whatsAppUrl(tel: string, ad: string, kod: string): string {
   } else if (!temiz.startsWith("90") && temiz.length === 10) {
     temiz = "90" + temiz;
   }
-  const mesaj = `Merhaba, tedarikcim.net.tr üzerinden "${ad}" (${kod}) için 30-180 gün vadeli alım (tedarikçi finansmanı) ve toptan teklif almak istiyorum.`;
+  const mesaj = `Merhaba, tedarikcim.net.tr üzerinden "${ad}" (${kod}) için anlaşmaya göre vadeli alım (tedarikçi finansmanı) ve toptan teklif almak istiyorum.`;
   return `https://wa.me/${temiz}?text=${encodeURIComponent(mesaj)}`;
 }
 
