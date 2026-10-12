@@ -5,7 +5,7 @@ import { ZodError } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { ParaHatasi } from "@/lib/money";
 import { YetkiHatasi } from "@/lib/scope-cekirdek";
-import { IslemHatasi } from "@/lib/siparis-islemleri";
+import { IslemHatasi } from "@/lib/hatalar";
 
 const TEKIL_KISIT: Record<string, string> = {
   firma_vergi_no_key: "Bu vergi numarası başka bir firmada kayıtlı.",
@@ -24,6 +24,13 @@ const CHECK_KISIT: Record<string, string> = {
   kullanici_email_kucuk_harf: "E-posta küçük harfle kaydedilir.",
   urun_kdv_orani_aralik: "KDV oranı 0 ile 100 arasında olmalı.",
   odeme_tutar_pozitif: "Ödeme tutarı sıfırdan büyük olmalı.",
+  firma_vergi_no_bicimi: "Vergi no yalnız rakamlardan oluşmalı ve 10 ya da 11 hane olmalı.",
+  kullanici_firma_rol_uyumu: "Admin firmasız; tedarikçi ve alıcı kullanıcıları bir firmaya bağlı olmalı.",
+  urun_fotograf_url_https: "Fotoğraf linki https:// ile başlamalı, boşluk içermemeli, en fazla 2000 karakter olmalı.",
+  urun_kategori_bos_degil: "Kategori boş olamaz (en fazla 100 karakter).",
+  urun_liste_fiyat_negatif_degil: "Liste fiyatı negatif olamaz.",
+  urun_koli_adedi_pozitif: "Koli adedi sıfırdan büyük olmalı.",
+  urun_min_siparis_pozitif: "Minimum sipariş sıfırdan büyük olmalı.",
 };
 
 export function hataMesaji(e: unknown): string {

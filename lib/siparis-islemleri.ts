@@ -22,6 +22,7 @@ import {
   type Karar,
   type SiparisBaglami,
 } from "@/lib/siparis-durum";
+import { IslemHatasi } from "@/lib/hatalar";
 import { gecerliGunMu, gunTarih, tarihGun } from "@/lib/tarih";
 
 /** Denetim kaydındaki işlem adları. Sipariş detayındaki durum geçmişi bunlardan okunur. */
@@ -38,12 +39,7 @@ export const ISLEM = {
   onayBaglantisi: "onay.baglanti_uret",
 } as const;
 
-export class IslemHatasi extends Error {
-  constructor(mesaj: string) {
-    super(mesaj);
-    this.name = "IslemHatasi";
-  }
-}
+export { IslemHatasi };
 
 function zorunlu(k: Karar): void {
   if (!k.izin) throw new IslemHatasi(k.neden);

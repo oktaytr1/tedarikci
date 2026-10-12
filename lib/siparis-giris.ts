@@ -19,7 +19,7 @@ import {
 } from "@/lib/money";
 import type { Aktor, KapsamliDb } from "@/lib/scope-cekirdek";
 import { siparisDuzenlemeDenetle } from "@/lib/siparis-durum";
-import { IslemHatasi } from "@/lib/siparis-islemleri";
+import { GirisHatasi, IslemHatasi } from "@/lib/hatalar";
 import { gecerliGunMu, gunEkle, gunTarih } from "@/lib/tarih";
 
 export const EN_FAZLA_SATIR = 200;
@@ -61,13 +61,7 @@ export const siparisGirdiSemasi = z
 
 export type SiparisGirdisi = z.infer<typeof siparisGirdiSemasi>;
 
-/** Hatalar alan bazında döner; ekran ilgili alanın altında gösterir. Anahtar: "komisyonOran", "satirlar.2.adet" … */
-export class GirisHatasi extends IslemHatasi {
-  constructor(public alanlar: Record<string, string>) {
-    super(Object.values(alanlar)[0] ?? "Girdi hatalı.");
-    this.name = "GirisHatasi";
-  }
-}
+export { GirisHatasi };
 
 type UrunKaydi = {
   id: number;
