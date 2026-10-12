@@ -1,15 +1,21 @@
-import "dotenv/config";
+import path from "node:path";
 import { defineConfig, env } from "prisma/config";
 
-// Prisma CLI (migrate deploy/dev) bağlantısı. Uygulama bir bağlantı havuzu (PgBouncer, Neon pooler)
-// arkasındaysa migration'lar doğrudan bağlantı ister: DIRECT_DATABASE_URL tanımlıysa o kullanılır.
-// Uygulamanın kendisi her zaman DATABASE_URL kullanır (lib/db.ts).
+try {
+  process.loadEnvFile(path.join(__dirname, ".env"));
+} catch {
+  // Üretimde DATABASE_URL ortam değişkeninden gelir.
+}
+
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: path.join("prisma", "schema.prisma"),
   migrations: {
-    path: "prisma/migrations",
+    path: path.join("prisma", "migrations"),
   },
   datasource: {
-    url: process.env.DIRECT_DATABASE_URL || env("DATABASE_URL"),
+    url: env("DATABASE_URL"),
+    ...(process.env.SHADOW_DATABASE_URL
+      ? { shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL }
+      : {}),
   },
 });

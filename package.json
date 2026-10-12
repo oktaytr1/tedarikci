@@ -1,6 +1,6 @@
 {
   "name": "tadarikci-pazarlama",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -8,27 +8,20 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run",
-    "test:para": "TEST_DATABASE_URL= vitest run tests/money.test.ts",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
-    "admin:olustur": "tsx scripts/admin-olustur.ts",
-    "db:ornek": "tsx scripts/ornek-veri.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@base-ui/react": "1.9.0",
+    "@base-ui/react": "^1.9.0",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
-    "@tanstack/react-table": "9.2.8",
-    "bcryptjs": "3.0.3",
     "class-variance-authority": "0.7.1",
     "cn": "0.4.0",
     "decimal.js": "10.6.0",
     "lucide-react": "1.55.0",
     "next": "16.4.0",
-    "next-auth": "5.0.0-beta.32",
     "next-themes": "0.4.6",
     "pg": "8.23.1",
     "react": "19.3.0",
@@ -46,14 +39,11 @@
     "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "dotenv": "18.0.7",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.0",
     "prisma": "7.10.0",
     "tailwindcss": "4.3.3",
-    "tsx": "4.23.15",
-    "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": ">=24"

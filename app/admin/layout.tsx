@@ -1,30 +1,30 @@
-import { Suspense } from "react";
-import { Building2, Package, Users } from "lucide-react";
-import { PanelKabugu } from "@/components/oturum/panel-kabugu";
-import { rolGerekli } from "@/lib/authz";
+import { Package } from "lucide-react";
+import Link from "next/link";
+import { Logo } from "@/components/marka/logo";
 
-// Bu düzen yalnız yönlendirme ve görünüm içindir; asıl yetki her sorguda kapsam katmanındadır.
 export default function AdminDuzeni({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Yükleniyor…</div>}>
-      <Korumali>{children}</Korumali>
-    </Suspense>
-  );
-}
-
-async function Korumali({ children }: { children: React.ReactNode }) {
-  const aktor = await rolGerekli("admin");
-  return (
-    <PanelKabugu
-      aktor={aktor}
-      baslik="Admin paneli"
-      menu={[
-        { href: "/admin/urunler", etiket: "Ürünler", ikon: <Package className="size-4" /> },
-        { href: "/admin/firmalar", etiket: "Firmalar", ikon: <Building2 className="size-4" /> },
-        { href: "/admin/kullanicilar", etiket: "Kullanıcılar", ikon: <Users className="size-4" /> },
-      ]}
-    >
-      {children}
-    </PanelKabugu>
+    <div className="flex min-h-full flex-col">
+      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
+          <Link href="/admin" className="flex items-center gap-2">
+            <Logo baglanti={false} className="h-7" />
+            <span className="text-sm font-semibold text-muted-foreground">Yönetim</span>
+          </Link>
+          <nav className="flex items-center gap-3 text-sm">
+            <Link href="/admin/urunler" className="flex items-center gap-1 hover:text-foreground text-muted-foreground">
+              <Package className="size-4" /> Ürünler
+            </Link>
+          </nav>
+          <div className="flex-1" />
+          <Link href="/katalog" className="text-xs text-muted-foreground hover:text-foreground">
+            Kataloğa git →
+          </Link>
+        </div>
+      </header>
+      <main className="flex-1 px-4 py-6">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </main>
+    </div>
   );
 }

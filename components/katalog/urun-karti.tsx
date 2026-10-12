@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Building2, CalendarClock, ChevronRight, MessageCircle, Tag } from "lucide-react";
+import { CalendarClock, ChevronRight, MessageCircle, Tag } from "lucide-react";
 import type { KatalogUrunu } from "@/lib/katalog";
 import { oranYaz, paraYaz } from "@/lib/money";
 import { UrunGorseli } from "./urun-gorseli";
 
-/** Modern dikey B2B ürün kartı — E-ticaret standardında görsel hiyerarşi, vadeli alım rozeti ve WhatsApp sipariş butonu. */
+/** Modern dikey B2B ürün kartı — görsel hiyerarşi, vadeli alım rozeti ve WhatsApp sipariş butonu. */
 export function UrunKarti({
   u,
   href,
@@ -14,8 +14,8 @@ export function UrunKarti({
   href: string;
   durumGoster?: boolean;
 }) {
-  const whatsAppMesaji = `Merhaba, tedarikcim.net.tr üzerinden "${u.ad}" (${u.kod}) ürünü hakkında toptan vadeli alım ve tedarikçi finansmanı koşullarını öğrenmek istiyorum.`;
-  const whatsAppAdresi = `https://wa.me/908503000000?text=${encodeURIComponent(whatsAppMesaji)}`;
+  const whatsAppMesaji = `Merhaba, tedarikcim.net.tr üzerinden "${u.ad}" (${u.kod}) ürünü hakkında bilgi almak istiyorum.`;
+  const whatsAppAdresi = `https://wa.me/905012542020?text=${encodeURIComponent(whatsAppMesaji)}`;
 
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-xl">
@@ -43,14 +43,10 @@ export function UrunKarti({
 
       {/* Orta Bilgi Bölümü */}
       <div className="flex flex-1 flex-col gap-2.5 p-4">
-        {/* Ürün Kodu & Tedarikçi */}
-        <div className="flex items-center justify-between gap-2 text-xs">
+        {/* Ürün Kodu */}
+        <div className="flex items-center gap-2 text-xs">
           <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] font-semibold text-muted-foreground">
             {u.kod}
-          </span>
-          <span className="inline-flex items-center gap-1 truncate text-[11px] font-medium text-muted-foreground">
-            <Building2 className="size-3 shrink-0 text-muted-foreground/70" />
-            <span className="truncate">{u.tedarikci}</span>
           </span>
         </div>
 
@@ -94,19 +90,17 @@ export function UrunKarti({
 
       {/* Alt Aksiyon Butonları */}
       <div className="flex items-center gap-2 border-t border-border/60 bg-muted/20 p-3">
-        {/* WhatsApp Hızlı Vadeli Teklif */}
         <a
           href={whatsAppAdresi}
           target="_blank"
           rel="noopener noreferrer"
-          title="WhatsApp ile vadeli alım ve finansman koşullarını sor"
+          title="WhatsApp ile bilgi al"
           className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 text-xs font-semibold text-white shadow-2xs transition-all hover:bg-emerald-700 active:scale-95"
         >
           <MessageCircle className="size-3.5" />
-          <span>Vadeli Teklif / Sipariş</span>
+          <span>Bilgi Al / Sipariş</span>
         </a>
 
-        {/* Ürün Detayı */}
         <Link
           href={href}
           title="Ürün detaylarını gör"

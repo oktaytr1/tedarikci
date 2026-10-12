@@ -1,9 +1,4 @@
-// B2B Tedarikçi Pazarlama Platformu — veri modeli.
-// Kurallar (bkz. mimari doküman, "Veri temeli"):
-//   - Para alanları Decimal(18,2). Float yok.
-//   - Hiçbir kayıt silinmez (DB tetikleyicisi + Prisma extension + ESLint).
-//   - Elle yazılmış CHECK kısıtları ve tetikleyiciler: migrations/*_kisitlar_ve_tetikleyiciler.
-// Tablo/kolon adları dokümandaki gibi Türkçe snake_case; model adları PascalCase.
+// Sadeleştirilmiş B2B Katalog — yalnızca Urun tablosu.
 
 generator client {
   provider = "prisma-client"
@@ -14,265 +9,23 @@ datasource db {
   provider = "postgresql"
 }
 
-enum FirmaTip {
-  tedarikci
-  alici
-  her_ikisi
-
-  @@map("firma_tip")
-}
-
-enum FirmaDurum {
-  aktif
-  pasif
-
-  @@map("firma_durum")
-}
-
-enum Rol {
-  admin
-  tedarikci
-  alici
-
-  @@map("rol")
-}
-
-enum OdemeTipi {
-  pesin
-  vadeli
-
-  @@map("odeme_tipi")
-}
-
-enum SiparisDurum {
-  girildi
-  tedarikci_onayladi
-  sevk_edildi
-  alici_onayladi
-  odendi
-
-  @@map("siparis_durum")
-}
-
-enum OdemeYontemi {
-  havale_eft
-  nakit
-  cek
-  diger
-
-  @@map("odeme_yontemi")
-}
-
-model Firma {
-  id         Int        @id @default(autoincrement())
-  unvan      String
-  vergi_no   String     @unique
-  tip        FirmaTip
-  durum      FirmaDurum @default(aktif)
-  adres      String?
-  telefon    String?
-  olusturma  DateTime   @default(now()) @db.Timestamptz(3)
-  guncelleme DateTime   @updatedAt @db.Timestamptz(3)
-
-  kullanicilar      Kullanici[]
-  urunler           Urun[]
-  alici_siparisler  Siparis[]   @relation("AliciSiparis")
-  satici_siparisler Siparis[]   @relation("SaticiSiparis")
-  odedigi_odemeler  Odeme[]     @relation("OdeyenFirma")
-  aldigi_odemeler   Odeme[]     @relation("AlanFirma")
-
-  @@map("firma")
-}
-
-model Kullanici {
-  id          Int      @id @default(autoincrement())
-  // Admin firmasızdır (NULL); tedarikçi ve alıcı için firma zorunlu (CHECK).
-  firma_id    Int?
-  email       String   @unique
-  parola_hash String
-  rol         Rol
-  aktif       Boolean  @default(true)
-  olusturma   DateTime @default(now()) @db.Timestamptz(3)
-  guncelleme  DateTime @updatedAt @db.Timestamptz(3)
-
-  firma             Firma?         @relation(fields: [firma_id], references: [id])
-  denetim_kayitlari DenetimKaydi[]
-
-  @@index([firma_id])
-  @@map("kullanici")
-}
-
 model Urun {
   id           Int      @id @default(autoincrement())
-  // Satıcı firma.
-  firma_id     Int
-  kod          String
+  kod          String   @unique
   ad           String
-  // Katalog alanları: teknik açıklama, serbest metin kategori (filtre buna dayanır),
-  // dışarıdan tek fotoğraf linki (yalnız https, en fazla 2000 karakter; yükleme yok).
   aciklama     String?
   kategori     String?
   fotograf_url String?
-  // Türkçe duyarsız arama metni (kod + ad). Uygulama yazmaz; veritabanı tetikleyicisi doldurur.
-  arama_metni  String?
-  birim        String
+  birim        String   @default("adet")
   koli_adedi   Int?
   min_siparis  Decimal? @db.Decimal(18, 3)
-  liste_fiyat  Decimal  @db.Decimal(18, 2) // KDV hariç
-  kdv_orani    Decimal  @db.Decimal(5, 2) // yüzde, ör. 20.00
-  // Pasif ürün yeni siparişte seçilemez; geçmiş siparişlerde görünmeye devam eder.
+  liste_fiyat  Decimal  @db.Decimal(18, 2)
+  kdv_orani    Decimal  @db.Decimal(5, 2)  @default(20.00)
   aktif        Boolean  @default(true)
   olusturma    DateTime @default(now()) @db.Timestamptz(3)
   guncelleme   DateTime @updatedAt @db.Timestamptz(3)
 
-  firma             Firma          @relation(fields: [firma_id], references: [id])
-  siparis_satirlari SiparisSatir[]
-
-  @@unique([firma_id, kod])
   @@index([kategori])
+  @@index([aktif])
   @@map("urun")
-}
-
-model Siparis {
-  id              Int          @id @default(autoincrement())
-  alici_firma_id  Int
-  satici_firma_id Int
-  tarih           DateTime     @default(dbgenerated("CURRENT_DATE")) @db.Date
-  odeme_tipi      OdemeTipi
-  vade_gun        Int?
-  vade_tarihi     DateTime?    @db.Date
-  durum           SiparisDurum @default(girildi)
-
-  // Toplamlar satırlardan lib/money.ts ile türetilir (KDV hariç ara toplam).
-  ara_toplam     Decimal @db.Decimal(18, 2)
-  kdv_toplam     Decimal @db.Decimal(18, 2)
-  genel_toplam   Decimal @db.Decimal(18, 2)
-  // Platform komisyonu faturanın parçası değildir; matrah ara_toplam.
-  komisyon_oran  Decimal @db.Decimal(5, 2)
-  komisyon_tutar Decimal @db.Decimal(18, 2)
-
-  // Tedarikçinin alıcıya kestiği tek fatura.
-  fatura_no     String?
-  fatura_tarihi DateTime? @db.Date
-  // Elle girilen fatura tutarı; genel_toplam ile tutmazsa engellenmez, işaretlenir
-  // (bkz. lib/money.ts faturaTutarUyusuyorMu).
-  fatura_tutar  Decimal?  @db.Decimal(18, 2)
-
-  // Ödeme bildirimi girildiğinde (durum = odendi) doldurulur.
-  odeme_tarihi DateTime? @db.Date
-
-  iptal_mi     Boolean   @default(false)
-  iptal_nedeni String?
-  iptal_zamani DateTime? @db.Timestamptz(3)
-
-  olusturma  DateTime @default(now()) @db.Timestamptz(3)
-  guncelleme DateTime @updatedAt @db.Timestamptz(3)
-
-  alici    Firma          @relation("AliciSiparis", fields: [alici_firma_id], references: [id])
-  satici   Firma          @relation("SaticiSiparis", fields: [satici_firma_id], references: [id])
-  satirlar SiparisSatir[]
-  odemeler Odeme[]
-  onaylar  Onay[]
-
-  // Aynı satıcının aynı fatura numarası iki kez girilemez (NULL'lar çakışmaz).
-  @@unique([satici_firma_id, fatura_no])
-  @@index([alici_firma_id])
-  @@index([durum])
-  @@index([tarih])
-  @@map("siparis")
-}
-
-model SiparisSatir {
-  id           Int      @id @default(autoincrement())
-  siparis_id   Int
-  urun_id      Int
-  // Sipariş anındaki kopyalar: ürün sonradan değişse de satır değişmez.
-  ad           String
-  birim        String
-  adet         Decimal  @db.Decimal(18, 3)
-  birim_fiyat  Decimal  @db.Decimal(18, 2) // KDV hariç
-  kdv_orani    Decimal  @db.Decimal(5, 2)
-  kdv_tutar    Decimal  @db.Decimal(18, 2)
-  satir_toplam Decimal  @db.Decimal(18, 2) // KDV hariç net
-  // Satır silinmez, iptal edilir. Ekleme/iptal yalnız sipariş "girildi" iken (DB tetikleyicisi).
-  iptal_mi     Boolean  @default(false)
-  olusturma    DateTime @default(now()) @db.Timestamptz(3)
-
-  siparis Siparis @relation(fields: [siparis_id], references: [id])
-  urun    Urun    @relation(fields: [urun_id], references: [id])
-
-  @@index([siparis_id])
-  @@index([urun_id])
-  @@map("siparis_satir")
-}
-
-// Ödeme bir bildirimdir, tahsilat değil: "alıcı tedarikçiye şu tarihte şu tutarı ödedi".
-// Tek meşru yön: ödeyen = siparişin alıcısı, alan = siparişin satıcısı (DB tetikleyicisi).
-// Platform komisyonunun tahsilatı bu tabloya girmez.
-model Odeme {
-  id              Int          @id @default(autoincrement())
-  siparis_id      Int
-  odeyen_firma_id Int
-  alan_firma_id   Int
-  tutar           Decimal      @db.Decimal(18, 2)
-  tarih           DateTime     @db.Date
-  yontem          OdemeYontemi
-  not             String?
-  iptal_mi        Boolean      @default(false)
-  iptal_nedeni    String?
-  olusturma       DateTime     @default(now()) @db.Timestamptz(3)
-  guncelleme      DateTime     @updatedAt @db.Timestamptz(3)
-
-  siparis Siparis @relation(fields: [siparis_id], references: [id])
-  odeyen  Firma   @relation("OdeyenFirma", fields: [odeyen_firma_id], references: [id])
-  alan    Firma   @relation("AlanFirma", fields: [alan_firma_id], references: [id])
-
-  @@index([siparis_id])
-  @@map("odeme")
-}
-
-// Alıcının imzalı bağlantıdan verdiği onay. Kullanıldıktan sonra değiştirilemez (DB tetikleyicisi).
-// Kurallar (DB): siparişte en fazla bir kullanılmış ve en fazla bir geçerli bağlantı;
-// yeni bağlantı eskileri geçersiz kılar; kullanılmış onay varken yeni bağlantı üretilemez.
-model Onay {
-  id                 Int       @id @default(autoincrement())
-  siparis_id         Int
-  // Ham token asla saklanmaz.
-  token_hash         String    @unique
-  olusturma          DateTime  @default(now()) @db.Timestamptz(3)
-  son_gecerlilik     DateTime  @db.Timestamptz(3)
-  kullanildi_mi      Boolean   @default(false)
-  // Yeni bağlantı üretilince eski bağlantı bu zamanla geçersiz kılınır (tetikleyici doldurur).
-  iptal_zamani       DateTime? @db.Timestamptz(3)
-  onay_zamani        DateTime? @db.Timestamptz(3)
-  onaylanan_tutar    Decimal?  @db.Decimal(18, 2)
-  // Onay anındaki sipariş kalemlerinin kopyası.
-  onaylanan_kalemler Json?
-  ip                 String?
-  user_agent         String?
-
-  siparis Siparis @relation(fields: [siparis_id], references: [id])
-
-  @@index([siparis_id])
-  @@map("onay")
-}
-
-// Kritik işlemlerin değiştirilemez kaydı. Yalnız lib/audit.ts (denetimli) yazar.
-model DenetimKaydi {
-  id           Int      @id @default(autoincrement())
-  zaman        DateTime @default(now()) @db.Timestamptz(3)
-  // NULL: oturumsuz aktör (alıcı onayı, CLI betiği).
-  kullanici_id Int?
-  islem        String
-  tablo        String
-  kayit_id     Int
-  eski         Json?
-  yeni         Json?
-  ip           String?
-
-  kullanici Kullanici? @relation(fields: [kullanici_id], references: [id])
-
-  @@index([tablo, kayit_id])
-  @@index([zaman])
-  @@map("denetim_kaydi")
 }

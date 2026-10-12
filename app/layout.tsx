@@ -15,13 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "tedarikcim.net.tr — B2B Kapalı Katalog Platformu",
-  description: "Yetkili firmalar için kapalı devre B2B tedarikçi ve ürün kataloğu.",
-  // Kapalı katalog: arama motorlarına kapalı (robots.ts ve X-Robots-Tag başlığıyla birlikte).
-  robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
+  title: "tedarikcim.net.tr — B2B Ürün Kataloğu",
+  description: "B2B tedarikçi ürün kataloğu. Ürünleri inceleyin, fiyatları görün.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="tr"

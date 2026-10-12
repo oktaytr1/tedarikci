@@ -2,12 +2,9 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Boxes,
-  Building2,
   CalendarClock,
   CheckCircle2,
   FileText,
-  MapPin,
-  Phone,
   Tag,
 } from "lucide-react";
 import type { KatalogDetayi } from "@/lib/katalog";
@@ -15,7 +12,7 @@ import { miktarYaz, oranYaz } from "@/lib/money";
 import { Fiyat } from "./fiyat";
 import { UrunGorseli } from "./urun-gorseli";
 
-/** Ürün detayı (alıcı ve tedarikçi ortak). Telefonda tek sütun; `altEylem` alt kenarda sabit durur. */
+/** Ürün detayı. Telefonda tek sütun; `altEylem` alt kenarda sabit durur. */
 export function UrunDetayi({
   u,
   geri,
@@ -57,7 +54,7 @@ export function UrunDetayi({
           </div>
         </div>
 
-        {/* Sağ Kolon: Detaylar, Fiyat ve Tedarikçi */}
+        {/* Sağ Kolon: Detaylar, Fiyat */}
         <div className="flex flex-col gap-5">
           {/* Başlık ve Kod */}
           <div className="flex flex-col gap-2">
@@ -108,22 +105,14 @@ export function UrunDetayi({
             </div>
 
             <div className="grid grid-cols-4 gap-1.5 py-2 text-center text-xs font-semibold">
-              <div className="rounded-lg border border-emerald-500/20 bg-background/80 py-1.5 text-foreground">
-                30 Gün
-              </div>
-              <div className="rounded-lg border border-emerald-500/20 bg-background/80 py-1.5 text-foreground">
-                60 Gün
-              </div>
-              <div className="rounded-lg border border-emerald-500/20 bg-background/80 py-1.5 text-foreground">
-                90 Gün
-              </div>
-              <div className="rounded-lg border border-emerald-500/20 bg-emerald-600 text-white shadow-2xs">
-                180 Gün
-              </div>
+              <div className="rounded-lg border border-emerald-500/20 bg-background/80 py-1.5 text-foreground">30 Gün</div>
+              <div className="rounded-lg border border-emerald-500/20 bg-background/80 py-1.5 text-foreground">60 Gün</div>
+              <div className="rounded-lg border border-emerald-500/20 bg-background/80 py-1.5 text-foreground">90 Gün</div>
+              <div className="rounded-lg border border-emerald-500/20 bg-emerald-600 text-white shadow-2xs">180 Gün</div>
             </div>
 
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              Marketler ve toptan alıcılar için vadeli alım seçeneği. <strong>Vade süresi (30 - 180 gün), firmanızla yapılacak ticari anlaşmaya ve limite göre belirlenir.</strong> Mal teslimi teyit edildiğinde üretici faturasını finansman ortaklığıyla peşin tahsil eder.
+              Marketler ve toptan alıcılar için vadeli alım seçeneği. <strong>Vade süresi (30 - 180 gün), firmanızla yapılacak ticari anlaşmaya ve limite göre belirlenir.</strong>
             </p>
           </div>
 
@@ -171,40 +160,10 @@ export function UrunDetayi({
               </p>
             </div>
           )}
-
-          {/* Tedarikçi Kartı */}
-          <section className="rounded-2xl border border-border/80 bg-gradient-to-br from-card to-muted/20 p-4 shadow-2xs">
-            <div className="mb-2.5 flex items-center gap-2">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Building2 className="size-4" />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Yetkili Tedarikçi
-                </span>
-                <h2 className="text-sm font-bold text-foreground">{u.tedarikciBilgisi.unvan}</h2>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
-              {u.tedarikciBilgisi.adres && (
-                <p className="flex items-start gap-1.5">
-                  <MapPin className="size-3.5 shrink-0 text-muted-foreground/70 mt-0.5" />
-                  <span className="whitespace-pre-line">{u.tedarikciBilgisi.adres}</span>
-                </p>
-              )}
-              {u.tedarikciBilgisi.telefon && (
-                <p className="flex items-center gap-1.5 font-medium text-foreground">
-                  <Phone className="size-3.5 shrink-0 text-muted-foreground/70" />
-                  <span>{u.tedarikciBilgisi.telefon}</span>
-                </p>
-              )}
-            </div>
-          </section>
         </div>
       </div>
 
-      {/* Aksiyon Butonları (Mobilde Alt Bar, Masaüstünde Sabit Blok) */}
+      {/* Aksiyon Butonları */}
       {altEylem && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/80 bg-background/95 p-3.5 shadow-lg backdrop-blur-md md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none">
           {altEylem}

@@ -1,22 +1,8 @@
-// Ürün yönetimi (admin). Her yazma denetimli() içinde çağrılır:
-//   await denetimli(URUN_ISLEM.guncelle, (vt, a) => urunGuncelle(vt, a, id, girdi), ["admin"]);
-//
-// Para ve miktar lib/money.ts ile okunur (tr-TR: "1.234,56"). KDV oranı lib/kdv.ts listesinden
-// seçilir; düzenlemede ürünün mevcut (listede artık olmayan) oranı korunabilir.
-// Fotoğraf linkine sunucudan istek ATILMAZ (SSRF): yalnız biçim denetlenir.
-
 import { z } from "zod";
-import { GirisHatasi, IslemHatasi } from "@/lib/hatalar";
+import { GirisHatasi, alanHatasi, metinVeyaNull } from "@/lib/admin/eylem";
 import { KDV_ORANLARI } from "@/lib/kdv";
 import { dbMiktar, dbOran, dbPara, miktarOku, paraOku } from "@/lib/money";
-import type { Aktor, KapsamliDb } from "@/lib/scope-cekirdek";
-import { adminGerekli, alanHatasi, metinVeyaNull } from "./ortak";
-
-export const URUN_ISLEM = {
-  olustur: "urun.olustur",
-  guncelle: "urun.guncelle",
-  durum: "urun.durum",
-} as const;
+import type { Db } from "@/lib/db";
 
 export const FOTOGRAF_URL_EN_FAZLA = 2000;
 const HTTPS_LINK = /^https:\/\/[^\s]+$/;
@@ -44,7 +30,6 @@ export const urunSemasi = z.object({
 });
 export type UrunGirdisi = z.input<typeof urunSemasi>;
 
-/** Girdiyi doğrular, para/miktarı okur; tüm alan hatalarını birlikte döndürür. */
 function urunVerisi(girdi: unknown, mevcutKdv: string | null) {
   const p = urunSemasi.safeParse(girdi);
   if (!p.success) throw alanHatasi(p.error);
@@ -63,7 +48,6 @@ function urunVerisi(girdi: unknown, mevcutKdv: string | null) {
   let kdvOrani: string | undefined;
   try {
     const k = dbOran(g.kdvOrani.replace(",", "."));
-    // Yeni ya da değiştirilen oran listeden; ürünün mevcut oranı listede olmasa da korunabilir.
     if ((KDV_ORANLARI as readonly string[]).includes(k) || k === mevcutKdv) kdvOrani = k;
     else hatalar.kdvOrani = "KDV oranı listeden seçilmeli.";
   } catch {
@@ -94,50 +78,44 @@ function urunVerisi(girdi: unknown, mevcutKdv: string | null) {
   };
 }
 
-async function kodTekrariniDenetle(vt: KapsamliDb, firmaId: number, kod: string, haricId?: number) {
+async function kodTekrariniDenetle(vt: Db, kod: string, haricId?: number) {
   const varolan = await vt.urun.findFirst({
-    where: { firma_id: firmaId, kod: { equals: kod, mode: "insensitive" }, ...(haricId ? { NOT: { id: haricId } } : {}) },
+    where: { kod: { equals: kod, mode: "insensitive" }, ...(haricId ? { NOT: { id: haricId } } : {}) },
     select: { kod: true, ad: true },
   });
   if (varolan) {
-    throw new GirisHatasi({ kod: `Bu tedarikçide "${varolan.kod}" kodlu ürün zaten var (${varolan.ad}).` });
+    throw new GirisHatasi({ kod: `"${varolan.kod}" kodlu ürün zaten var (${varolan.ad}).` });
   }
 }
 
-/** Yeni ürün. Dönüş: ürün kimliği. */
-export async function urunOlustur(vt: KapsamliDb, aktor: Aktor, firmaId: number, girdi: unknown): Promise<number> {
-  adminGerekli(aktor);
+export async function urunOlustur(vt: Db, girdi: unknown): Promise<number> {
   const veri = urunVerisi(girdi, null);
-  const firma = await vt.firma.findUnique({ where: { id: firmaId }, select: { tip: true } });
-  if (!firma || firma.tip === "alici") throw new GirisHatasi({ firmaId: "Tedarikçi firma seçin." });
-  await kodTekrariniDenetle(vt, firmaId, veri.kod);
-  const u = await vt.urun.create({ data: { ...veri, firma_id: firmaId }, select: { id: true } });
+  await kodTekrariniDenetle(vt, veri.kod);
+  const u = await vt.urun.create({ data: veri, select: { id: true } });
   return u.id;
 }
 
-/** Ürün düzenleme. Tedarikçi değiştirilemez. */
-export async function urunGuncelle(vt: KapsamliDb, aktor: Aktor, id: number, girdi: unknown): Promise<void> {
-  adminGerekli(aktor);
-  const mevcut = await vt.urun.findUnique({ where: { id }, select: { firma_id: true, kdv_orani: true } });
-  if (!mevcut) throw new IslemHatasi("Ürün bulunamadı.");
+export async function urunGuncelle(vt: Db, id: number, girdi: unknown): Promise<void> {
+  const mevcut = await vt.urun.findUnique({ where: { id }, select: { kdv_orani: true } });
+  if (!mevcut) throw new Error("Ürün bulunamadı.");
   const veri = urunVerisi(girdi, dbOran(mevcut.kdv_orani));
-  await kodTekrariniDenetle(vt, mevcut.firma_id, veri.kod, id);
+  await kodTekrariniDenetle(vt, veri.kod, id);
   await vt.urun.update({ where: { id }, data: veri });
 }
 
-/** Aktif / pasif. Silme yoktur; pasif ürün katalogda görünmez, admin listesinde kalır. */
-export async function urunDurumDegistir(vt: KapsamliDb, aktor: Aktor, id: number, aktif: boolean): Promise<void> {
-  adminGerekli(aktor);
+export async function urunDurumDegistir(vt: Db, id: number, aktif: boolean): Promise<void> {
   const r = await vt.urun.updateMany({ where: { id, aktif: !aktif }, data: { aktif } });
   if (r.count !== 1) {
     const varMi = await vt.urun.count({ where: { id } });
-    throw new IslemHatasi(varMi ? `Ürün zaten ${aktif ? "aktif" : "pasif"}.` : "Ürün bulunamadı.");
+    throw new Error(varMi ? `Ürün zaten ${aktif ? "aktif" : "pasif"}.` : "Ürün bulunamadı.");
   }
 }
 
-/** Otomatik tamamlama: mevcut kategoriler ve birimler (tekrarsız, alfabetik). */
-export async function urunOnerileri(vt: KapsamliDb, aktor: Aktor): Promise<{ kategoriler: string[]; birimler: string[] }> {
-  adminGerekli(aktor);
+export async function urunSil(vt: Db, id: number): Promise<void> {
+  await vt.urun.delete({ where: { id } });
+}
+
+export async function urunOnerileri(vt: Db): Promise<{ kategoriler: string[]; birimler: string[] }> {
   const [k, b] = await Promise.all([
     vt.urun.findMany({ where: { kategori: { not: null } }, distinct: ["kategori"], select: { kategori: true } }),
     vt.urun.findMany({ distinct: ["birim"], select: { birim: true } }),
