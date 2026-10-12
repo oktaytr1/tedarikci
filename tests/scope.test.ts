@@ -381,6 +381,137 @@ describe.skipIf(!VT_VAR)("kapsam katmanı (veritabanı)", () => {
     });
   });
 
+  describe("sipariş satırı: yalnız 'girildi' iken değişir", () => {
+    const satir = (siparisId: number) => ({
+      siparis_id: siparisId, urun_id: id.urunA, ad: "ek", birim: "adet", adet: "2",
+      birim_fiyat: "10.00", kdv_orani: "20.00", kdv_tutar: "4.00", satir_toplam: "20.00",
+    });
+
+    it("girildi iken satır eklenir ve iptal edilir", async () => {
+      const yeni = await ham.siparisSatir.create({ data: satir(id.sipA) });
+      const iptal = await ham.siparisSatir.update({ where: { id: yeni.id }, data: { iptal_mi: true } });
+      expect(iptal.iptal_mi).toBe(true);
+    });
+
+    it("tedarikçi onayından sonra satır ne eklenir ne iptal edilir", async () => {
+      const mevcut = await ham.siparisSatir.findFirstOrThrow({ where: { siparis_id: id.sipA } });
+      await ham.siparis.update({ where: { id: id.sipA }, data: { durum: "tedarikci_onayladi" } });
+      await expect(ham.siparisSatir.create({ data: satir(id.sipA) })).rejects.toThrow(/yalnız "girildi"/);
+      await expect(
+        ham.siparisSatir.update({ where: { id: mevcut.id }, data: { iptal_mi: true } }),
+      ).rejects.toThrow(/yalnız "girildi"/);
+    });
+
+    it("iptal edilmiş siparişin satırları değiştirilemez", async () => {
+      await ham.siparis.update({
+        where: { id: id.sipA },
+        data: { iptal_mi: true, iptal_nedeni: "deneme", iptal_zamani: new Date() },
+      });
+      await expect(ham.siparisSatir.create({ data: satir(id.sipA) })).rejects.toThrow(/iptal edilmiş/);
+    });
+  });
+
+  describe("onay bağlantısı", () => {
+    const gelecek = () => new Date(Date.now() + 7 * 86_400_000);
+    const baglantiUret = (token: string) =>
+      cekirdek.denetimliAktorle(admin, "onay.baglanti_uret", (vt) =>
+        vt.onay.create({ data: { siparis_id: id.sipA, token_hash: token, son_gecerlilik: gelecek() } }),
+      );
+    const kullan = (onayId: number) =>
+      ham.onay.update({
+        where: { id: onayId },
+        data: { kullanildi_mi: true, onay_zamani: new Date(), onaylanan_tutar: "12.00", onaylanan_kalemler: [] },
+      });
+
+    it("yeni bağlantı eskisini geçersiz kılar; geçersiz bağlantı değiştirilemez", async () => {
+      const eski = await baglantiUret("t-eski");
+      const yeni = await baglantiUret("t-yeni");
+      const [e, y] = await Promise.all([
+        ham.onay.findUniqueOrThrow({ where: { id: eski.id } }),
+        ham.onay.findUniqueOrThrow({ where: { id: yeni.id } }),
+      ]);
+      expect(e.iptal_zamani).not.toBeNull();
+      expect(y.iptal_zamani).toBeNull();
+      await expect(kullan(eski.id)).rejects.toThrow(/Geçersiz kılınmış/);
+    });
+
+    it("kullanılmış onay varken yeni bağlantı üretilemez", async () => {
+      const b = await baglantiUret("t-1");
+      await kullan(b.id);
+      await expect(baglantiUret("t-2")).rejects.toThrow(/zaten onaylanmış/);
+    });
+
+    it("bağlantı veritabanında da kullanılmış olarak oluşturulamaz (uygulama atlansa bile)", async () => {
+      await expect(
+        ham.onay.create({
+          data: {
+            siparis_id: id.sipA, token_hash: "t-sahte", son_gecerlilik: gelecek(),
+            kullanildi_mi: true, onay_zamani: new Date(), onaylanan_tutar: "12.00", onaylanan_kalemler: [],
+          },
+        }),
+      ).rejects.toThrow(/kullanılmamış ve geçerli/);
+    });
+
+    it("eşzamanlı iki bağlantı üretiminden biri kısmi tekil indekse takılır", async () => {
+      const pg = await import("pg");
+      const url = testVeritabaniAdresi()!;
+      const c1 = new pg.default.Client({ connectionString: url });
+      const c2 = new pg.default.Client({ connectionString: url });
+      await Promise.all([c1.connect(), c2.connect()]);
+      const ekle = (c: InstanceType<typeof pg.default.Client>, token: string) =>
+        c.query(`INSERT INTO onay (siparis_id, token_hash, son_gecerlilik) VALUES ($1, $2, now() + interval '7 days')`, [
+          id.sipA,
+          token,
+        ]);
+      try {
+        await c1.query("BEGIN");
+        await c2.query("BEGIN");
+        await ekle(c1, "es-1"); // c1 henüz commit etmedi: c2 eski bağlantıyı göremez
+        const ikinci = ekle(c2, "es-2"); // tekil indekste c1'i bekler
+        await c1.query("COMMIT");
+        await expect(ikinci).rejects.toThrow(/onay_siparis_tek_gecerli/);
+        await c2.query("ROLLBACK");
+      } finally {
+        await Promise.all([c1.end(), c2.end()]);
+      }
+      expect(await ham.onay.count({ where: { siparis_id: id.sipA, iptal_zamani: null, kullanildi_mi: false } })).toBe(1);
+    });
+
+    it("kısmi tekil indeksler veritabanında tanımlı", async () => {
+      const r = await ham.$queryRawUnsafe<{ indexdef: string }[]>(
+        `SELECT indexdef FROM pg_indexes WHERE tablename = 'onay' AND indexname LIKE 'onay_siparis_tek_%' ORDER BY indexname`,
+      );
+      expect(r.map((x) => x.indexdef)).toEqual([
+        expect.stringMatching(/UNIQUE INDEX onay_siparis_tek_gecerli .*WHERE \(\(NOT kullanildi_mi\) AND \(iptal_zamani IS NULL\)\)/),
+        expect.stringMatching(/UNIQUE INDEX onay_siparis_tek_kullanilmis .*WHERE kullanildi_mi/),
+      ]);
+    });
+  });
+
+  describe("ödeme yönü", () => {
+    const odeme = (odeyen: number, alan: number) =>
+      ham.odeme.create({
+        data: { siparis_id: id.sipA, odeyen_firma_id: odeyen, alan_firma_id: alan, tutar: "12.00", tarih: new Date(), yontem: "havale_eft" },
+      });
+
+    it("ödeyen = siparişin alıcısı, alan = siparişin satıcısı kabul edilir", async () => {
+      await expect(odeme(id.aliciX, id.tedFirmaA)).resolves.toMatchObject({ tutar: expect.anything() });
+    });
+
+    it("ters yön ve üçüncü firma reddedilir", async () => {
+      await expect(odeme(id.tedFirmaA, id.aliciX)).rejects.toThrow(/Ödeme yönü geçersiz/);
+      await expect(odeme(id.aliciY, id.tedFirmaA)).rejects.toThrow(/Ödeme yönü geçersiz/);
+      await expect(odeme(id.aliciX, id.tedFirmaB)).rejects.toThrow(/Ödeme yönü geçersiz/);
+    });
+
+    it("ödemesi olan siparişin alıcısı sonradan değiştirilemez", async () => {
+      await odeme(id.aliciX, id.tedFirmaA);
+      await expect(
+        ham.siparis.update({ where: { id: id.sipA }, data: { alici_firma_id: id.aliciY } }),
+      ).rejects.toThrow(/alıcı\/satıcı değiştirilemez/);
+    });
+  });
+
   describe("oturum çözümü", () => {
     it("pasif kullanıcı ve pasif firmanın kullanıcısı aktöre çözülmez", async () => {
       const { aktorCoz } = await import("@/lib/oturum-cozumu");

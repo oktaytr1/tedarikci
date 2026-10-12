@@ -185,6 +185,8 @@ model SiparisSatir {
   kdv_orani    Decimal  @db.Decimal(5, 2)
   kdv_tutar    Decimal  @db.Decimal(18, 2)
   satir_toplam Decimal  @db.Decimal(18, 2) // KDV hariç net
+  // Satır silinmez, iptal edilir. Ekleme/iptal yalnız sipariş "girildi" iken (DB tetikleyicisi).
+  iptal_mi     Boolean  @default(false)
   olusturma    DateTime @default(now()) @db.Timestamptz(3)
 
   siparis Siparis @relation(fields: [siparis_id], references: [id])
@@ -196,6 +198,8 @@ model SiparisSatir {
 }
 
 // Ödeme bir bildirimdir, tahsilat değil: "alıcı tedarikçiye şu tarihte şu tutarı ödedi".
+// Tek meşru yön: ödeyen = siparişin alıcısı, alan = siparişin satıcısı (DB tetikleyicisi).
+// Platform komisyonunun tahsilatı bu tabloya girmez.
 model Odeme {
   id              Int          @id @default(autoincrement())
   siparis_id      Int
@@ -219,6 +223,8 @@ model Odeme {
 }
 
 // Alıcının imzalı bağlantıdan verdiği onay. Kullanıldıktan sonra değiştirilemez (DB tetikleyicisi).
+// Kurallar (DB): siparişte en fazla bir kullanılmış ve en fazla bir geçerli bağlantı;
+// yeni bağlantı eskileri geçersiz kılar; kullanılmış onay varken yeni bağlantı üretilemez.
 model Onay {
   id                 Int       @id @default(autoincrement())
   siparis_id         Int
@@ -227,6 +233,8 @@ model Onay {
   olusturma          DateTime  @default(now()) @db.Timestamptz(3)
   son_gecerlilik     DateTime  @db.Timestamptz(3)
   kullanildi_mi      Boolean   @default(false)
+  // Yeni bağlantı üretilince eski bağlantı bu zamanla geçersiz kılınır (tetikleyici doldurur).
+  iptal_zamani       DateTime? @db.Timestamptz(3)
   onay_zamani        DateTime? @db.Timestamptz(3)
   onaylanan_tutar    Decimal?  @db.Decimal(18, 2)
   // Onay anındaki sipariş kalemlerinin kopyası.

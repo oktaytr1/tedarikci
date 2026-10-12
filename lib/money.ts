@@ -6,6 +6,7 @@
 //   - Fiyatlar KDV HARİÇ.
 //   - KDV satır bazında: net = yuvarla(adet × birim_fiyat), kdv = yuvarla(net × oran / 100).
 //   - Sipariş toplamları yuvarlanmış satırların toplamıdır; toplam üzerinden KDV yeniden hesaplanmaz.
+//   - İptal edilmiş satır toplamlara katılmaz.
 //   - Komisyon matrahı ara_toplam (KDV hariç).
 //   - Yuvarlama: 2 hane, yarım yukarı (ROUND_HALF_UP; 0,005 → 0,01).
 //
@@ -131,15 +132,16 @@ export type SiparisToplamlari = {
   kdvDokumu: Map<string, { matrah: Decimal; kdv: Decimal }>;
 };
 
-export function siparisToplamlari(
-  satirlar: ReadonlyArray<Pick<SatirSonucu, "satirToplam" | "kdvTutar" | "kdvOrani">>,
-  komisyonOran: Sayi,
-): SiparisToplamlari {
+/** Toplamlara giren satır. `iptalMi` true olan satır toplamlara katılmaz. */
+export type ToplamSatiri = Pick<SatirSonucu, "satirToplam" | "kdvTutar" | "kdvOrani"> & { iptalMi?: boolean };
+
+export function siparisToplamlari(satirlar: ReadonlyArray<ToplamSatiri>, komisyonOran: Sayi): SiparisToplamlari {
   let araToplam = new Decimal(0);
   let kdvToplam = new Decimal(0);
   const kdvDokumu = new Map<string, { matrah: Decimal; kdv: Decimal }>();
 
   for (const s of satirlar) {
+    if (s.iptalMi) continue;
     araToplam = araToplam.plus(s.satirToplam);
     kdvToplam = kdvToplam.plus(s.kdvTutar);
     const anahtar = new Decimal(s.kdvOrani.toString()).toFixed(2);

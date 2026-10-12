@@ -142,6 +142,19 @@ describe("sipariş toplamları", () => {
     expect(s2(t.genelToplam)).toBe("0.84");
   });
 
+  it("iptal edilmiş satır toplamlara katılmaz", () => {
+    // A (37,50 / 7,50) geçerli, B (23,31 / 2,33) iptal → ara 37,50 ; KDV 7,50 ; genel 45,00
+    // komisyon %2 → 37,50 × 0,02 = 0,75
+    const a = satirHesapla({ adet: "3", birim: "adet", birimFiyat: "12.50", kdvOrani: "20" });
+    const b = satirHesapla({ adet: "7", birim: "adet", birimFiyat: "3.33", kdvOrani: "10" });
+    const t = siparisToplamlari([a, { ...b, iptalMi: true }], "2");
+    expect(s2(t.araToplam)).toBe("37.50");
+    expect(s2(t.kdvToplam)).toBe("7.50");
+    expect(s2(t.genelToplam)).toBe("45.00");
+    expect(s2(t.komisyonTutar)).toBe("0.75");
+    expect(t.kdvDokumu.has("10.00")).toBe(false);
+  });
+
   it("boş sipariş sıfır döner", () => {
     const t = siparisToplamlari([], "5");
     expect(s2(t.genelToplam)).toBe("0.00");
