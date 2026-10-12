@@ -40,6 +40,7 @@
     "zod": "4.6.6"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "20.19.43",
     "@types/pg": "8.23.1",
