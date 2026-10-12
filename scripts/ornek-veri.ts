@@ -1,4 +1,5 @@
-// Geliştirme ortamı için örnek veri: iki tedarikçi, iki alıcı, ürünler ve bir geliştirme admini.
+// Geliştirme ortamı için örnek veri: iki tedarikçi, iki alıcı, ürünler, her firmaya bir kullanıcı
+// ve bir geliştirme admini.
 //
 //   npm run db:ornek
 //
@@ -21,11 +22,11 @@ const TEDARIKCILER = [
     vergi_no: "1234567801",
     kullanici: "tedarikci@anadolugida.local",
     urunler: [
-      { kod: "AG-001", ad: "Ayçiçek yağı 5 L", birim: "adet", koli_adedi: 4, liste_fiyat: "389.90", kdv_orani: "1" },
-      { kod: "AG-002", ad: "Baldo pirinç 1 kg", birim: "adet", koli_adedi: 12, liste_fiyat: "89.50", kdv_orani: "1" },
-      { kod: "AG-003", ad: "Kırmızı mercimek", birim: "kg", liste_fiyat: "62.40", kdv_orani: "1", min_siparis: "25" },
-      { kod: "AG-004", ad: "Toz şeker 50 kg çuval", birim: "adet", liste_fiyat: "2149.00", kdv_orani: "1" },
-      { kod: "AG-010", ad: "Bulaşık deterjanı 4 L", birim: "adet", koli_adedi: 4, liste_fiyat: "164.90", kdv_orani: "20" },
+      { kod: "AG-001", ad: "Ayçiçek yağı 5 L", kategori: "Yağ", aciklama: "Rafine ayçiçek yağı, PET şişe, 4'lü koli.", birim: "adet", koli_adedi: 4, liste_fiyat: "389.90", kdv_orani: "1" },
+      { kod: "AG-002", ad: "Baldo pirinç 1 kg", kategori: "Bakliyat", birim: "adet", koli_adedi: 12, liste_fiyat: "89.50", kdv_orani: "1" },
+      { kod: "AG-003", ad: "Kırmızı mercimek", kategori: "Bakliyat", aciklama: "Dökme, 25 kg çuvallarda.", birim: "kg", liste_fiyat: "62.40", kdv_orani: "1", min_siparis: "25" },
+      { kod: "AG-004", ad: "Toz şeker 50 kg çuval", kategori: "Şeker", birim: "adet", liste_fiyat: "2149.00", kdv_orani: "1" },
+      { kod: "AG-010", ad: "Bulaşık deterjanı 4 L", kategori: "Temizlik", birim: "adet", koli_adedi: 4, liste_fiyat: "164.90", kdv_orani: "20" },
     ],
   },
   {
@@ -33,16 +34,16 @@ const TEDARIKCILER = [
     vergi_no: "1234567802",
     kullanici: "tedarikci@egetemizlik.local",
     urunler: [
-      { kod: "ET-100", ad: "Çamaşır suyu 4 L", birim: "adet", koli_adedi: 4, liste_fiyat: "74.90", kdv_orani: "20" },
-      { kod: "ET-101", ad: "Yüzey temizleyici 2,5 L", birim: "adet", koli_adedi: 6, liste_fiyat: "96.00", kdv_orani: "20" },
-      { kod: "ET-200", ad: "Kâğıt havlu 12'li", birim: "adet", liste_fiyat: "219.90", kdv_orani: "10" },
+      { kod: "ET-100", ad: "Çamaşır suyu 4 L", kategori: "Temizlik", birim: "adet", koli_adedi: 4, liste_fiyat: "74.90", kdv_orani: "20" },
+      { kod: "ET-101", ad: "Yüzey temizleyici 2,5 L", kategori: "Temizlik", birim: "adet", koli_adedi: 6, liste_fiyat: "96.00", kdv_orani: "20" },
+      { kod: "ET-200", ad: "Kâğıt havlu 12'li", kategori: "Kâğıt", birim: "adet", liste_fiyat: "219.90", kdv_orani: "10" },
     ],
   },
 ];
 
 const ALICILAR = [
-  { unvan: "Kardeşler Market Zinciri A.Ş.", vergi_no: "9876543201", adres: "İzmir", telefon: "0232 000 00 00" },
-  { unvan: "Yıldız Otel İşletmeleri Ltd.", vergi_no: "9876543202", adres: "Antalya", telefon: "0242 000 00 00" },
+  { unvan: "Kardeşler Market Zinciri A.Ş.", vergi_no: "9876543201", adres: "İzmir", telefon: "0232 000 00 00", kullanici: "alici@kardeslermarket.local" },
+  { unvan: "Yıldız Otel İşletmeleri Ltd.", vergi_no: "9876543202", adres: "Antalya", telefon: "0242 000 00 00", kullanici: "alici@yildizotel.local" },
 ];
 
 async function main() {
@@ -62,10 +63,18 @@ async function main() {
   }
 
   await denetimliAktorle({ tip: "admin", kullaniciId: admin.id }, "ornek_veri.yukle", async (vt) => {
-    for (const a of ALICILAR) {
-      if (await vt.firma.findUnique({ where: { vergi_no: a.vergi_no } })) continue;
-      await vt.firma.create({ data: { ...a, tip: "alici" } });
-      console.log(`Alıcı: ${a.unvan}`);
+    for (const { kullanici, ...a } of ALICILAR) {
+      let firma = await vt.firma.findUnique({ where: { vergi_no: a.vergi_no } });
+      if (!firma) {
+        firma = await vt.firma.create({ data: { ...a, tip: "alici" } });
+        console.log(`Alıcı: ${a.unvan}`);
+      }
+      if (!(await vt.kullanici.findUnique({ where: { email: kullanici } }))) {
+        await vt.kullanici.create({
+          data: { email: kullanici, parola_hash: await parolaHashle(parola), rol: "alici", firma_id: firma.id },
+        });
+        console.log(`Alıcı kullanıcısı: ${kullanici} (parola: admin ile aynı)`);
+      }
     }
     for (const t of TEDARIKCILER) {
       let firma = await vt.firma.findUnique({ where: { vergi_no: t.vergi_no } });
@@ -76,6 +85,9 @@ async function main() {
       for (const u of t.urunler) {
         const varMi = await vt.urun.findFirst({ where: { firma_id: firma.id, kod: u.kod } });
         if (!varMi) await vt.urun.create({ data: { ...u, firma_id: firma.id } });
+        else if (!varMi.kategori) {
+          await vt.urun.update({ where: { id: varMi.id }, data: { kategori: u.kategori, aciklama: u.aciklama ?? null } });
+        }
       }
       if (!(await vt.kullanici.findUnique({ where: { email: t.kullanici } }))) {
         await vt.kullanici.create({

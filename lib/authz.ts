@@ -15,11 +15,15 @@ export const oturumAktoru = cache(async (): Promise<Aktor | null> => {
   return aktorCoz(id);
 });
 
-/** Sayfalar için: oturum yoksa girişe, rol uymuyorsa ana sayfaya yönlendirir. */
+/**
+ * Sayfalar için: oturum yoksa ya da rol uymuyorsa girişe yönlendirir. Her sayfa kendisi çağırır
+ * (düzendeki kontrol sayfanın önceden render edilen kısmını durdurmaz). Normal kullanımda yanlış
+ * alana proxy izin vermez; buraya düşen rol uyuşmazlığı bayat oturum demektir (rol değişmiş).
+ */
 export async function rolGerekli<R extends Aktor["tip"]>(...roller: R[]): Promise<Extract<Aktor, { tip: R }>> {
   const aktor = await oturumAktoru();
   if (!aktor) redirect("/giris");
-  if (!roller.includes(aktor.tip as R)) redirect("/");
+  if (!roller.includes(aktor.tip as R)) redirect("/giris?yenile=1");
   return aktor as Extract<Aktor, { tip: R }>;
 }
 

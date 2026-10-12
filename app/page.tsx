@@ -14,5 +14,5 @@ export default function AnaSayfa() {
 async function Yonlendir(): Promise<null> {
   const aktor = await oturumAktoru();
   if (!aktor) redirect("/giris");
-  redirect(aktor.tip === "admin" ? "/admin" : "/tedarikci");
+  redirect(aktor.tip === "admin" ? "/admin" : aktor.tip === "tedarikci" ? "/tedarikci" : "/katalog");
 }

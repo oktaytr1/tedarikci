@@ -1,8 +1,9 @@
-// Auth.js: yalnız admin ve tedarikçi kullanıcıları için e-posta + parola girişi.
-// Alıcı için oturum yoktur; alıcı yalnız tek kullanımlık onay bağlantısıyla işlem yapar.
+// Auth.js: üç rol (admin, tedarikçi, alıcı) e-posta + parolayla girer. Kayıt formu yoktur,
+// kullanıcıları admin açar. Kapalı katalog: girişsiz hiçbir veri dönmez.
 //
-// Oturum JWT'dir (ayrı oturum tablosu yok). JWT yalnız kullanıcı kimliğini taşır;
-// rol, aktiflik ve firma her istekte veritabanından okunur (lib/oturum-cozumu.ts).
+// Oturum JWT'dir (ayrı oturum tablosu yok). JWT kullanıcı kimliğini ve giriş anındaki rolü taşır.
+// Rol yalnız proxy'nin iyimser alan yönlendirmesi içindir (/admin, /tedarikci, /katalog);
+// yetki kararı her istekte veritabanından okunan rol, aktiflik ve firmayla verilir (lib/oturum-cozumu.ts).
 
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -62,20 +63,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
         // Pasif kullanıcı, pasif firma veya rol/firma tutarsızlığı: giriş yok.
-        if (!(await aktorCoz(k.id))) return null;
+        const aktor = await aktorCoz(k.id);
+        if (!aktor) return null;
 
         hatalar.delete(email);
-        return { id: String(k.id), email: k.email };
+        return { id: String(k.id), email: k.email, rol: aktor.tip };
       },
     }),
   ],
   callbacks: {
     jwt({ token, user }) {
-      if (user?.id) token.sub = user.id;
+      if (user?.id) {
+        token.sub = user.id;
+        token.rol = (user as { rol?: string }).rol;
+      }
       return token;
     },
     session({ session, token }) {
       if (token.sub) session.user.id = token.sub;
+      (session.user as { rol?: unknown }).rol = token.rol;
       return session;
     },
   },
