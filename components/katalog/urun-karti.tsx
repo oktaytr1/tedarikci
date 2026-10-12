@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Building2, ChevronRight, MessageCircle, Tag } from "lucide-react";
+import { Building2, CalendarClock, ChevronRight, MessageCircle, Tag } from "lucide-react";
 import type { KatalogUrunu } from "@/lib/katalog";
 import { oranYaz, paraYaz } from "@/lib/money";
 import { UrunGorseli } from "./urun-gorseli";
 
-/** Modern dikey B2B ürün kartı — E-ticaret standardında görsel hiyerarşi, KDV rozeti ve WhatsApp sipariş butonu. */
+/** Modern dikey B2B ürün kartı — E-ticaret standardında görsel hiyerarşi, vadeli alım rozeti ve WhatsApp sipariş butonu. */
 export function UrunKarti({
   u,
   href,
@@ -14,7 +14,7 @@ export function UrunKarti({
   href: string;
   durumGoster?: boolean;
 }) {
-  const whatsAppMesaji = `Merhaba, tedarikcim.net.tr üzerinden "${u.ad}" (${u.kod}) ürününüz hakkında toptan sipariş ve fiyat bilgisi almak istiyorum.`;
+  const whatsAppMesaji = `Merhaba, tedarikcim.net.tr üzerinden "${u.ad}" (${u.kod}) ürünü hakkında toptan vadeli alım ve tedarikçi finansmanı koşullarını öğrenmek istiyorum.`;
   const whatsAppAdresi = `https://wa.me/908503000000?text=${encodeURIComponent(whatsAppMesaji)}`;
 
   return (
@@ -68,10 +68,16 @@ export function UrunKarti({
           </span>
         )}
 
+        {/* Tedarikçi Finansmanı & Vade Rozeti */}
+        <div className="flex items-center gap-1.5 rounded-lg bg-emerald-50/80 px-2 py-1 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+          <CalendarClock className="size-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <span>30 - 180 Gün Vadeli Alım İmkanı</span>
+        </div>
+
         {/* Fiyat Bloğu */}
-        <div className="mt-1 rounded-xl bg-zinc-50 p-2.5 dark:bg-zinc-900/50 border border-border/50">
+        <div className="rounded-xl bg-zinc-50 p-2.5 dark:bg-zinc-900/50 border border-border/50">
           <div className="flex items-baseline justify-between gap-1">
-            <span className="text-[11px] font-medium text-muted-foreground">Liste Fiyatı:</span>
+            <span className="text-[11px] font-medium text-muted-foreground">Peşin Liste:</span>
             <div className="flex items-baseline gap-1 font-bold tabular-nums text-foreground">
               <span className="text-lg font-extrabold text-foreground">{paraYaz(u.listeFiyat)}</span>
               <span className="text-xs text-muted-foreground">TL / {u.birim}</span>
@@ -88,16 +94,16 @@ export function UrunKarti({
 
       {/* Alt Aksiyon Butonları */}
       <div className="flex items-center gap-2 border-t border-border/60 bg-muted/20 p-3">
-        {/* WhatsApp Hızlı Sipariş */}
+        {/* WhatsApp Hızlı Vadeli Teklif */}
         <a
           href={whatsAppAdresi}
           target="_blank"
           rel="noopener noreferrer"
-          title="WhatsApp ile bu ürün hakkında sipariş / bilgi iste"
+          title="WhatsApp ile vadeli alım ve finansman koşullarını sor"
           className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 text-xs font-semibold text-white shadow-2xs transition-all hover:bg-emerald-700 active:scale-95"
         >
           <MessageCircle className="size-3.5" />
-          <span>WhatsApp Sipariş</span>
+          <span>Vadeli Teklif / Sipariş</span>
         </a>
 
         {/* Ürün Detayı */}

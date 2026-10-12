@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Boxes,
   Building2,
+  CalendarClock,
   CheckCircle2,
   FileText,
   MapPin,
@@ -86,6 +87,45 @@ export function UrunDetayi({
             birim={u.birim}
             buyuk
           />
+
+          {/* Tedarikçi Finansmanı & Vade Seçenekleri */}
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 shadow-2xs">
+            <div className="mb-2.5 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                  <CalendarClock className="size-4" />
+                </div>
+                <div>
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
+                    Tedarikçi Finansmanı & Vadeli Alım
+                  </h2>
+                  <span className="text-[11px] text-muted-foreground">30 - 180 Güne Varan Vade İmkanı</span>
+                </div>
+              </div>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
+                Faktoring Destekli
+              </span>
+            </div>
+
+            <div className="grid grid-cols-4 gap-1.5 py-2 text-center text-xs font-semibold">
+              <div className="rounded-lg border border-emerald-500/20 bg-background/80 py-1.5 text-foreground">
+                30 Gün
+              </div>
+              <div className="rounded-lg border border-emerald-500/20 bg-background/80 py-1.5 text-foreground">
+                60 Gün
+              </div>
+              <div className="rounded-lg border border-emerald-500/20 bg-background/80 py-1.5 text-foreground">
+                90 Gün
+              </div>
+              <div className="rounded-lg border border-emerald-500/20 bg-emerald-600 text-white shadow-2xs">
+                180 Gün
+              </div>
+            </div>
+
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              Marketler ve perakende alıcılar için vadeli ödeme kolaylığı. Mal teslimi teyit edildiğinde üreticinin fatura bedeli finansman ortaklığıyla peşin ödenir.
+            </p>
+          </div>
 
           {/* Ürün B2B Özellik Tablosu */}
           <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-2xs">

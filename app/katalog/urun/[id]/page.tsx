@@ -24,7 +24,7 @@ function whatsAppUrl(tel: string, ad: string, kod: string): string {
   } else if (!temiz.startsWith("90") && temiz.length === 10) {
     temiz = "90" + temiz;
   }
-  const mesaj = `Merhaba, tedarikcim.net.tr üzerinden "${ad}" (${kod}) ürününüz hakkında toptan bilgi ve sipariş almak istiyorum.`;
+  const mesaj = `Merhaba, tedarikcim.net.tr üzerinden "${ad}" (${kod}) için 30-180 gün vadeli alım (tedarikçi finansmanı) ve toptan teklif almak istiyorum.`;
   return `https://wa.me/${temiz}?text=${encodeURIComponent(mesaj)}`;
 }
 
@@ -65,7 +65,7 @@ async function Icerik({ params }: Props) {
               className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-[0.99]"
             >
               <MessageCircle className="size-4" />
-              <span>WhatsApp ile Sipariş & Bilgi İste</span>
+              <span>WhatsApp ile Vadeli Teklif Al</span>
             </a>
 
             {/* Telefonla Ara Butonu */}

@@ -134,10 +134,10 @@ export const STATIK_URUNLER: StatikUrun[] = [
     listeFiyat: "2149.00",
     kdvOrani: "1.00",
     fotografUrl: "https://images.unsplash.com/photo-1622484216805-4c03b1e770c6?w=600&auto=format&fit=crop&q=80",
-    aciklama: "Pancar şekeri, beyaz kristal kuru toz şeker. Fabrika dolumu orijinal 50 kg çift katlı çuval.",
+    aciklama: "Pancar şekeri, beyaz kristal kuru toz şeker. Fabrika dolumu orijinal 50 kg çift katlı çuval. Şeker fabrikası doğrudan sevkiyatı; 30 - 180 gün vadeli alım ve tedarikçi finansmanı destekli toptan satış.",
     tedarikci: {
       id: 1,
-      unvan: "Anadolu Gıda & Yağ Sanayi Ltd. Şti.",
+      unvan: "Anadolu Gıda & Şeker Sanayi A.Ş.",
       adres: "Gıda Çarşısı No:42, Bornova / İzmir",
       telefon: "0850 300 00 00",
     },

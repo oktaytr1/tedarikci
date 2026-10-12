@@ -3,6 +3,7 @@ import { KatalogFiltreleri } from "@/components/katalog/katalog-filtreleri";
 import { KatalogHero } from "@/components/katalog/katalog-hero";
 import { KatalogListesi } from "@/components/katalog/katalog-listesi";
 import { KategoriSeridi } from "@/components/katalog/kategori-seridi";
+import { NasilCalisir } from "@/components/katalog/nasil-calisir";
 import { oturumAktoru } from "@/lib/authz";
 import { katalogFiltresiOku, katalogListesi, katalogSecenekleri } from "@/lib/katalog";
 import { kapsamliDb } from "@/lib/scope";
@@ -43,9 +44,12 @@ async function Icerik({ searchParams }: { searchParams: Arama }) {
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6">
+    <div className="mx-auto flex max-w-7xl flex-col gap-8">
       {/* Büyük Göz Alıcı Hero Karşılama Alanı */}
       <KatalogHero />
+
+      {/* İşin Mantığı: Tedarikçi Finansmanı ve Vadeli Alım Nasıl Çalışır? */}
+      <NasilCalisir />
 
       {/* Görsel Hızlı Kategori Seçimi */}
       <KategoriSeridi kategoriler={secenekler.kategoriler} />
