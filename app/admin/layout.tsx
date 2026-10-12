@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Building2, Package, Users } from "lucide-react";
 import { PanelKabugu } from "@/components/oturum/panel-kabugu";
 import { rolGerekli } from "@/lib/authz";
 
@@ -18,9 +19,9 @@ async function Korumali({ children }: { children: React.ReactNode }) {
       aktor={aktor}
       baslik="Admin paneli"
       menu={[
-        { href: "/admin/urunler", etiket: "Ürünler" },
-        { href: "/admin/firmalar", etiket: "Firmalar" },
-        { href: "/admin/kullanicilar", etiket: "Kullanıcılar" },
+        { href: "/admin/urunler", etiket: "Ürünler", ikon: <Package className="size-4" /> },
+        { href: "/admin/firmalar", etiket: "Firmalar", ikon: <Building2 className="size-4" /> },
+        { href: "/admin/kullanicilar", etiket: "Kullanıcılar", ikon: <Users className="size-4" /> },
       ]}
     >
       {children}

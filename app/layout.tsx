@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tedarikçi Pazarlama",
-  description: "B2B tedarikçi pazarlama platformu",
+  title: "tedarikcim.net.tr — B2B Kapalı Katalog Platformu",
+  description: "Yetkili firmalar için kapalı devre B2B tedarikçi ve ürün kataloğu.",
   // Kapalı katalog: arama motorlarına kapalı (robots.ts ve X-Robots-Tag başlığıyla birlikte).
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
