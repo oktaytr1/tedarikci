@@ -122,7 +122,8 @@ function tedarikciKurali(a: Extract<Aktor, { tip: "tedarikci" }>): RolKurali {
       Odeme: new Set(["siparis", "odeyen", "alan"]),
       Kullanici: new Set(["firma"]),
       Firma: new Set(),
-      Urun: new Set(),
+      // Ürün kökü kendi firmasına kısıtlı: firma ilişkisi yalnız kendi firma kartına çıkar.
+      Urun: new Set(["firma"]),
     },
     alanIzni: { Kullanici: KULLANICI_ALANLARI },
     // Durum geçiş kuralları lib/siparis-durum.ts'te ayrıca uygulanır.

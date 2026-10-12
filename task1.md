@@ -20,7 +20,7 @@ Hedef: yetkili firmalar giriş yapıp tedarikçileri ve ürünleri fiyatlarıyla
 - [x] Next.js 16 + TypeScript, PostgreSQL, Prisma 7, shadcn/ui, Auth.js v5
 - [x] Docker compose (yalnız db servisi), Dockerfile
 - [x] Git deposu ve ilk commit'ler
-- [ ] PostgreSQL 16'da tüm testlerin geçtiğini doğrula (Docker kurulunca)
+- [x] PostgreSQL 16'da tüm testlerin geçtiğini doğrula (Docker kurulunca)
 
 ## 1. Veri modeli — BÜYÜK ÖLÇÜDE TAMAMLANDI
 
@@ -60,26 +60,26 @@ Hedef: yetkili firmalar giriş yapıp tedarikçileri ve ürünleri fiyatlarıyla
 
 ## 4. Katalog (alıcı ekranı)
 
-- [ ] Giriş sonrası ana sayfa: tedarikçi firmalar listesi
-- [ ] Ürün listesi: kart veya tablo görünümü, fotoğraf + ad + fiyat + birim
-- [ ] Arama: ürün adı ve kodunda
-- [ ] Filtre: tedarikçi, kategori
-- [ ] Ürün detay sayfası: büyük fotoğraf, açıklama, tüm alanlar, tedarikçi bilgisi
-- [ ] Sepet, sipariş, "teklif iste" YOK — iletişim bilgisi gösterilir, o kadar
-- [ ] Mobilde düzgün çalışmalı (alıcılar telefondan bakacak)
+- [x] Giriş sonrası ana sayfa: ürün kataloğu (tedarikçi filtresiyle) — *tedarikçi listesi ayrı sayfa olarak yapılmadı, filtre olarak var*
+- [x] Ürün listesi: kart veya tablo görünümü, fotoğraf + ad + fiyat + birim
+- [x] Arama: ürün adı ve kodunda
+- [x] Filtre: tedarikçi, kategori
+- [x] Ürün detay sayfası: büyük fotoğraf, açıklama, tüm alanlar, tedarikçi bilgisi
+- [x] Sepet, sipariş, "teklif iste" YOK — iletişim bilgisi gösterilir, o kadar
+- [x] Mobilde düzgün çalışmalı (alıcılar telefondan bakacak)
 
 ## 5. Tedarikçi ekranı
 
-- [ ] Kendi ürünlerinin listesi, salt okunur
-- [ ] Ürün detayını görme
-- [ ] Düzeltme için admin iletişim bilgisi (bu sürümde tedarikçi ürün girmiyor)
+- [x] Kendi ürünlerinin listesi, salt okunur
+- [x] Ürün detayını görme
+- [x] Düzeltme için admin iletişim bilgisi (bu sürümde tedarikçi ürün girmiyor) — *değerler .env: PLATFORM_ILETISIM_EPOSTA / _TELEFON*
 
 ## 6. Gizlilik ve erişim
 
-- [ ] Oturumsuz her istek giriş sayfasına yönlenir (sunucu tarafında)
-- [ ] `robots.txt` ile tüm site kapalı, sayfalarda `noindex`
-- [ ] Ürün fotoğrafı linkleri dışarıdan geliyorsa bile sayfa oturumsuz açılmasın
-- [ ] Giriş denemesi sınırı (hâlihazırda bellekte, 15 dk / 5 hata)
+- [x] Oturumsuz her istek giriş sayfasına yönlenir (sunucu tarafında)
+- [x] `robots.txt` ile tüm site kapalı, sayfalarda `noindex`
+- [x] Ürün fotoğrafı linkleri dışarıdan geliyorsa bile sayfa oturumsuz açılmasın
+- [x] Giriş denemesi sınırı (hâlihazırda bellekte, 15 dk / 5 hata)
 
 ## 7. Yayına alma
 

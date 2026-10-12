@@ -78,7 +78,7 @@ const eslintConfig = defineConfig([
   },
   // Ham db'ye erişmesi gereken altyapı dosyaları.
   {
-    files: ["lib/db.ts", "lib/scope-cekirdek.ts", "lib/scope.ts", "lib/oturum-cozumu.ts", "auth.ts", "scripts/**"],
+    files: ["lib/db.ts", "lib/scope-cekirdek.ts", "lib/scope.ts", "lib/oturum-cozumu.ts", "auth.ts", "app/giris/actions.ts", "scripts/**"],
     rules: { "no-restricted-imports": "off" },
   },
   // Testler: aritmetik serbest değil (beklenen değerler sabit yazılır) ama çekirdeğe erişebilir.

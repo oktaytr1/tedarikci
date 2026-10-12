@@ -25,20 +25,23 @@ export async function PanelKabugu({
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b px-4 py-3">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-6 gap-y-2">
           <div className="font-semibold">{baslik}</div>
-          <nav className="flex flex-wrap gap-1 text-sm">
-            {menu.map((m) => (
-              <Link key={m.href} href={m.href} className="rounded-md px-2.5 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
-                {m.etiket}
-              </Link>
-            ))}
-          </nav>
+          {menu.length > 0 && (
+            <nav className="flex flex-wrap gap-1 text-sm">
+              {menu.map((m) => (
+                <Link key={m.href} href={m.href} className="rounded-md px-2.5 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                  {m.etiket}
+                </Link>
+              ))}
+            </nav>
+          )}
         </div>
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>
-            {ben?.email}
-            {ben?.firma ? ` · ${ben.firma.unvan}` : ""}
+        <div className="flex min-w-0 items-center gap-3 text-sm text-muted-foreground">
+          {/* Telefonda yalnız firma adı (kısaltılmış); e-posta geniş ekranda. */}
+          <span className="min-w-0 truncate">
+            <span className="hidden sm:inline">{ben?.email}</span>
+            {ben?.firma ? <span className="sm:before:content-['_·_']">{ben.firma.unvan}</span> : null}
           </span>
           <CikisDugmesi />
         </div>
