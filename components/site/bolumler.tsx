@@ -31,19 +31,16 @@ import { MESAJLAR, TELEFON_ADRESI, TELEFON_GORUNEN, whatsAppAdresi } from "@/lib
 // ---------------------------------------------------------------------------
 
 export function BolumBasligi({
-  ust,
   baslik,
   aciklama,
   koyu,
 }: {
-  ust: string;
   baslik: React.ReactNode;
   aciklama?: string;
   koyu?: boolean;
 }) {
   return (
     <div className="gorun flex max-w-2xl flex-col gap-3">
-      <span className={cn("text-sm font-semibold", koyu ? "text-lacivert-300" : "text-marka-700")}>{ust}</span>
       <h2
         className={cn(
           "text-3xl font-semibold tracking-tight text-balance sm:text-[2.5rem] sm:leading-[1.15]",
@@ -83,24 +80,22 @@ export function Hero() {
     <section className="border-b border-lacivert-100 bg-lacivert-50">
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-14 px-4 py-16 sm:py-24 lg:grid-cols-[1.1fr_1fr]">
         <div className="flex flex-col gap-6">
-          <p className="text-sm font-semibold text-marka-700">Faktoring destekli B2B toptan tedarik</p>
-
           <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight text-lacivert-950 text-balance sm:text-5xl">
-            Marketlere vadeli mal tedariki, <span className="text-lacivert-500">üreticilere anında nakit.</span>
+            Marketlere vadeli mal tedariki, üreticilere anında nakit.
           </h1>
 
           <p className="max-w-xl text-lg leading-relaxed text-lacivert-500 text-pretty">
-            Alıcılar anlaşmaya göre 30–180 gün vadeli mal alır, üreticiler fatura bedelini teslimatta peşin tahsil
-            eder. Ticaretin iki tarafını tek bir süreçte buluşturuyoruz.
+            Market ihtiyacı olan malı bugün alır, parasını anlaştığımız vadede öder. Üretici ise faturasının
+            bedelini vadeyi beklemeden, teslimattan sonra alır.
           </p>
 
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
             <Disari mesaj={MESAJLAR.alici} className={birincilDugme}>
-              Vadeli alım talebi
+              Teklif isteyin
               <ArrowRight className="size-4" />
             </Disari>
             <Disari mesaj={MESAJLAR.uretici} className={ikincilDugme}>
-              Üreticiyim, alacağımı peşine çevir
+              Üretici başvurusu
             </Disari>
           </div>
         </div>
@@ -116,12 +111,12 @@ export function Hero() {
           />
           <dl className="absolute bottom-4 left-4 grid grid-cols-2 divide-x divide-lacivert-100 rounded-md bg-white/95 text-sm shadow-md">
             <div className="px-4 py-3">
-              <dt className="text-xs text-lacivert-500">Alıcı öder</dt>
+              <dt className="text-xs text-lacivert-500">Market öder</dt>
               <dd className="mt-0.5 font-semibold text-lacivert-950">Vade sonunda</dd>
             </div>
             <div className="px-4 py-3">
-              <dt className="text-xs text-lacivert-500">Üretici tahsil eder</dt>
-              <dd className="mt-0.5 font-semibold text-marka-700">Teslimatta</dd>
+              <dt className="text-xs text-lacivert-500">Üretici alır</dt>
+              <dd className="mt-0.5 font-semibold text-marka-700">Teslimattan sonra</dd>
             </div>
           </dl>
         </div>
@@ -136,15 +131,15 @@ export function Hero() {
 
 export function KimlerIcin() {
   const ogeler = [
-    { ikon: Store, baslik: "Zincir marketler", alt: "Çok şubeli alımlarda vadeli tedarik" },
-    { ikon: ShoppingBasket, baslik: "Yerel marketler", alt: "Mahalle marketleri için düzenli tedarik" },
-    { ikon: Factory, baslik: "Fabrikalar", alt: "Vadeli satışını nakde çevirmek isteyenler" },
-    { ikon: Tags, baslik: "Üretici markalar", alt: "Yeni market kanallarına ulaşmak isteyenler" },
+    { ikon: Store, baslik: "Zincir marketler", alt: "Şubeleri için toplu alım yapanlar" },
+    { ikon: ShoppingBasket, baslik: "Yerel marketler", alt: "Mahalle marketleri ve bakkallar" },
+    { ikon: Factory, baslik: "Fabrikalar", alt: "Markete vadeli mal satan üreticiler" },
+    { ikon: Tags, baslik: "Yeni markalar", alt: "Market rafına girmek isteyenler" },
   ];
   return (
     <div className="border-b border-lacivert-100 bg-white">
       <div className="mx-auto max-w-7xl px-4">
-        <p className="pt-8 text-xs font-semibold uppercase tracking-wider text-lacivert-500">Kimler için</p>
+        <p className="pt-8 text-xs font-semibold uppercase tracking-wider text-lacivert-500">Kimlerle çalışıyoruz</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {ogeler.map((o) => (
             <div key={o.baslik} className="flex items-start gap-3 border-lacivert-100 py-6 sm:pr-6 lg:border-l lg:pl-6 lg:first:border-l-0 lg:first:pl-0">
@@ -168,30 +163,28 @@ export function KimlerIcin() {
 export function Cozumler() {
   const kartlar = [
     {
-      etiket: "Alıcılar için",
-      baslik: "Marketler ve perakendeciler",
-      aciklama: "Rafınızı doldurun, ödemeyi satış döngünüze göre planlayın.",
+      baslik: "Marketler için",
+      aciklama: "Malı şimdi alırsınız, ödemeyi ürün satıldıktan sonra yaparsınız.",
       maddeler: [
-        "Ticari anlaşmaya göre 30–180 gün vadeli alım",
-        "Temel ürün gruplarında toptan tedarik",
-        "Teslimat ve fatura teyidiyle güvenli süreç",
-        "Tek noktadan teklif ve sipariş iletişimi",
+        "30 ile 180 gün arası vade",
+        "Gıda, temizlik, kişisel bakım ve ambalaj ürünleri",
+        "Malı teslim alıp onaylamadan ödeme süreci başlamaz",
+        "Teklif ve sipariş için tek muhatap",
       ],
-      cta: "Vadeli alım talebi oluştur",
+      cta: "Teklif isteyin",
       mesaj: MESAJLAR.alici,
       gorsel: GORSELLER.market,
     },
     {
-      etiket: "Üreticiler için",
-      baslik: "Fabrikalar ve tedarikçiler",
-      aciklama: "Vadeli satış yapın, nakit akışınızı bekletmeyin.",
+      baslik: "Üreticiler için",
+      aciklama: "Markete vadeli satarsınız ama paranızı vadeyi beklemeden alırsınız.",
       maddeler: [
-        "Teyitli fatura bedelini teslimatta peşin tahsil edin",
-        "Alacak riskini faktoring altyapısıyla paylaşın",
-        "Ürünlerinizi yeni alıcılarla buluşturun",
-        "Vade yükü olmadan büyüme imkânı",
+        "Onaylanan faturanın bedeli teslimattan sonra hesabınızda",
+        "Tahsilat riskini tek başınıza taşımazsınız",
+        "Yeni marketlere satış imkânı",
+        "Vade verdiğiniz için nakitsiz kalmazsınız",
       ],
-      cta: "Alacağımı peşine çevir",
+      cta: "Başvurun",
       mesaj: MESAJLAR.uretici,
       gorsel: GORSELLER.uretim,
     },
@@ -200,20 +193,18 @@ export function Cozumler() {
   return (
     <section id="cozumler" className="mx-auto max-w-7xl px-4 py-24">
       <BolumBasligi
-        ust="Çözümler"
-        baslik="Ticaretin iki tarafı için tek süreç"
-        aciklama="Alıcı vadesini, üretici nakdini alır. Teyitli teslimat ve fatura süreci iki tarafın da güvencesidir."
+        baslik="Market de üretici de kazanır"
+        aciklama="Market vadeyle alır, üretici beklemeden parasını alır. Aradaki finansmanı faktoring şirketi üstlenir."
       />
 
       <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {kartlar.map((k) => (
-          <article key={k.etiket} className="gorun flex flex-col overflow-hidden rounded-lg border border-lacivert-200 bg-white">
+          <article key={k.baslik} className="gorun flex flex-col overflow-hidden rounded-lg border border-lacivert-200 bg-white">
             <div className="relative aspect-[16/7] bg-lacivert-100">
               <Image src={k.gorsel.src} alt={k.gorsel.alt} fill sizes="(min-width: 1024px) 620px, 100vw" className="object-cover" />
             </div>
             <div className="flex flex-1 flex-col p-8 sm:p-10">
-              <p className="text-sm font-semibold text-marka-700">{k.etiket}</p>
-              <h3 className="mt-2 text-2xl font-semibold tracking-tight text-lacivert-950">{k.baslik}</h3>
+              <h3 className="text-2xl font-semibold tracking-tight text-lacivert-950">{k.baslik}</h3>
               <p className="mt-2 text-lacivert-500">{k.aciklama}</p>
 
               <ul className="mt-8 flex flex-1 flex-col divide-y divide-lacivert-100 border-y border-lacivert-100">
@@ -248,13 +239,12 @@ export function SevkiyatBandi() {
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-lacivert-950/95 via-lacivert-950/80 to-lacivert-950/40" />
       <div className="mx-auto max-w-7xl px-4 py-24 sm:py-32">
         <div className="gorun max-w-2xl">
-          <p className="text-sm font-semibold text-lacivert-300">Üretimden rafa</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-balance sm:text-[2.75rem] sm:leading-[1.12]">
-            Malınız yolda, ödemeniz güvencede.
+          <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-[2.75rem] sm:leading-[1.12]">
+            Fabrikadan çıkan mal, doğrudan markete.
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-lacivert-200">
-            Ürünler üreticiden marketinize sevk edilir, her teslimat ve fatura kayıt altına alınır. Siz satışınıza,
-            biz sürecin geri kalanına odaklanırız.
+            Sevkiyatı üretici yapar, market malı teslim alıp faturayı onaylar. Arada depo ya da ek aracı yoktur;
+            her teslimatın kaydı tutulur.
           </p>
         </div>
       </div>
@@ -268,18 +258,17 @@ export function SevkiyatBandi() {
 
 export function NasilCalisirBolumu() {
   const adimlar = [
-    { baslik: "İhtiyacın iletilmesi", aciklama: "Market ihtiyaç duyduğu ürünleri ve miktarları bize iletir, teklifini alır." },
-    { baslik: "Vadeli alım anlaşması", aciklama: "Ticari anlaşmaya göre 30–180 gün arası vade belirlenir." },
-    { baslik: "Teslimat ve fatura teyidi", aciklama: "Üretici sevk eder; alıcı malı ve faturayı teslim alarak onaylar." },
-    { baslik: "Üreticiye peşin ödeme", aciklama: "Faktoring altyapısı teyitli alacağı devralır, üretici bedeli hemen tahsil eder." },
+    { baslik: "Talep", aciklama: "Market ihtiyacını ve miktarını bize iletir, fiyat ve vade teklifini alır." },
+    { baslik: "Anlaşma", aciklama: "Vade süresi ve teslim koşulları birlikte belirlenir." },
+    { baslik: "Teslimat", aciklama: "Üretici malı gönderir, market teslim alıp faturayı onaylar." },
+    { baslik: "Ödeme", aciklama: "Onaylı fatura faktoring şirketine devredilir ve üretici parasını alır. Market vade gelince öder." },
   ];
   return (
     <section id="nasil-calisir" className="border-y border-lacivert-100 bg-lacivert-50">
       <div className="mx-auto max-w-7xl px-4 py-24">
         <BolumBasligi
-          ust="Süreç"
-          baslik="Dört adımda vadeli tedarik"
-          aciklama="Talepten üreticinin tahsilatına kadar her adım teyitli ve izlenebilir ilerler."
+          baslik="Nasıl işliyor?"
+          aciklama="Talepten ödemeye dört adım."
         />
 
         <ol className="mt-14 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-lacivert-200 bg-lacivert-200 md:grid-cols-2 lg:grid-cols-4">
@@ -301,20 +290,17 @@ export function NasilCalisirBolumu() {
 // ---------------------------------------------------------------------------
 
 const KARSILASTIRMA = [
-  { konu: "Üreticinin tahsilatı", klasik: "Vade sonunu bekler", biz: "Teslimatta peşin" },
-  { konu: "Verilebilen vade", klasik: "Üreticinin nakit gücüyle sınırlı", biz: "Anlaşmaya göre 30–180 gün" },
-  { konu: "Tahsilat riski", klasik: "Tamamen üreticide", biz: "Faktoring altyapısıyla paylaşılır" },
-  { konu: "İşletme sermayesi", klasik: "Alacaklarda bağlı kalır", biz: "Üretim ve büyümeye ayrılır" },
-  { konu: "Teslimat kaydı", klasik: "Taraflar arasında dağınık", biz: "Teslimat ve fatura teyidiyle kayıt altında" },
+  { konu: "Üretici parasını ne zaman alır?", klasik: "Vade dolunca", biz: "Teslimattan sonra" },
+  { konu: "Ne kadar vade verilebilir?", klasik: "Üreticinin nakdi ne kadar dayanırsa", biz: "30 ile 180 gün arası" },
+  { konu: "Tahsilat riski kimde?", klasik: "Üreticide", biz: "Faktoring şirketiyle paylaşılır" },
+  { konu: "Üreticinin nakdi", klasik: "Alacaklarda bekler", biz: "Üretime geri döner" },
 ];
 
 export function Karsilastirma() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-24">
       <BolumBasligi
-        ust="Fark"
-        baslik="Klasik vadeli satış ile farkımız"
-        aciklama="Aynı ticaret, iki taraf için daha dengeli bir ödeme düzeni."
+        baslik="Klasik vadeli satıştan farkı"
       />
 
       <div className="gorun mt-14 overflow-x-auto rounded-lg border border-lacivert-200">
@@ -357,9 +343,8 @@ export function VadeBandi() {
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 py-20 lg:grid-cols-[1fr_1.2fr]">
         <BolumBasligi
           koyu
-          ust="Vade seçenekleri"
-          baslik="Nakit akışınıza uyan vade"
-          aciklama="Vadeyi marketin stok devir hızına ve satış döngüsüne göre birlikte belirliyoruz. Hızlı dönen ürünlerde kısa, mevsimsel alımlarda daha uzun vade mümkündür."
+          baslik="Vade süresi"
+          aciklama="Vadeyi ürünün rafta ne kadar hızlı satıldığına göre birlikte belirliyoruz. Hızlı satan ürünlerde kısa, sezonluk alımlarda daha uzun vade verilebilir."
         />
         <div className="gorun">
           <div className="grid grid-cols-5 overflow-hidden rounded-lg border border-white/15">
@@ -370,7 +355,7 @@ export function VadeBandi() {
               </div>
             ))}
           </div>
-          <p className="mt-3 text-sm text-lacivert-300">Gösterilen süreler örnek vade seçenekleridir.</p>
+          <p className="mt-3 text-sm text-lacivert-300">Örnek vade seçenekleri.</p>
         </div>
       </div>
     </section>
@@ -395,9 +380,8 @@ export function Kategoriler() {
   return (
     <section id="kategoriler" className="mx-auto max-w-7xl px-4 py-24">
       <BolumBasligi
-        ust="Ürün grupları"
-        baslik="Hizmet verdiğimiz ürün grupları"
-        aciklama="Marketlerin raflarındaki temel ürün gruplarında toptan tedarik."
+        baslik="Ürün grupları"
+        aciklama="Marketin her gün ihtiyaç duyduğu ürünler."
       />
 
       <ul className="mt-14 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-lacivert-200 bg-lacivert-200 sm:grid-cols-4">
@@ -427,18 +411,16 @@ export function Kategoriler() {
 
 export function Avantajlar() {
   const ogeler = [
-    { ikon: Wallet, baslik: "Güçlü nakit akışı", aciklama: "Üretici vadeli satışın bedelini beklemeden tahsil eder; işletme sermayesi serbest kalır." },
-    { ikon: BadgeCheck, baslik: "Teyitli işlem", aciklama: "Teslimat ve fatura alıcı tarafından onaylanmadan ödeme süreci başlamaz." },
-    { ikon: Receipt, baslik: "Şeffaf teklif", aciklama: "Fiyat, KDV ve vade koşulları teklif aşamasında açıkça paylaşılır." },
-    { ikon: Building2, baslik: "Kurumsal tedarik", aciklama: "Üretici ile alıcı arasında düzenli, faturalı ve izlenebilir B2B tedarik." },
+    { ikon: Wallet, baslik: "Para beklemez", aciklama: "Üretici vadeli sattığı malın parasını vade dolmadan alır." },
+    { ikon: BadgeCheck, baslik: "Onaysız ödeme yok", aciklama: "Market malı ve faturayı onaylamadan ödeme süreci başlamaz." },
+    { ikon: Receipt, baslik: "Açık teklif", aciklama: "Fiyat, KDV ve vade teklifte yazılı olarak belirtilir." },
+    { ikon: Building2, baslik: "Faturalı ticaret", aciklama: "Her sevkiyat faturalıdır ve kaydı tutulur." },
   ];
   return (
     <section id="avantajlar" className="border-y border-lacivert-100 bg-lacivert-50">
       <div className="mx-auto max-w-7xl px-4 py-24">
         <BolumBasligi
-          ust="Neden tedarikcim"
-          baslik="Vadeli ticareti iki taraf için de kolaylaştırıyoruz"
-          aciklama="Finansman, tedarik ve iletişimi tek bir akışta birleştiren yalın bir model."
+          baslik="Neden tedarikcim?"
         />
         <div className="mt-14 grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
           {ogeler.map((o) => (
@@ -461,23 +443,23 @@ export function Avantajlar() {
 const SORULAR = [
   {
     s: "Vade süresi nasıl belirleniyor?",
-    c: "Vade süresi, alıcı ile yapılan ticari anlaşmaya göre 30 ile 180 gün arasında belirlenir.",
+    c: "Market ile yapılan anlaşmaya göre 30 ile 180 gün arasında belirlenir.",
   },
   {
     s: "Üretici ödemesini ne zaman alır?",
-    c: "Teslimat ve fatura alıcı tarafından teyit edildikten sonra, faktoring altyapısı teyitli alacağı devralır ve üretici fatura bedelini peşin tahsil eder.",
+    c: "Market malı teslim alıp faturayı onayladıktan sonra fatura faktoring şirketine devredilir ve üretici bedelini alır.",
   },
   {
     s: "Nasıl teklif alırım?",
-    c: "İhtiyaç duyduğunuz ürünleri ve miktarları WhatsApp üzerinden iletin. Ekibimiz fiyat, KDV ve vade koşullarını içeren teklifi sizinle paylaşır.",
+    c: "İhtiyacınız olan ürünleri ve miktarları WhatsApp’tan yazın. Fiyat, KDV ve vadeyi içeren teklifi size iletelim.",
   },
   {
     s: "Hangi ürün gruplarında tedarik sağlıyorsunuz?",
-    c: "Temel gıda, yağ, bakliyat, içecek, temizlik, kişisel bakım ve ambalaj gibi marketlerin temel ürün gruplarında tedarik sağlıyoruz.",
+    c: "Temel gıda, yağ, bakliyat, içecek, temizlik, kişisel bakım ve ambalaj ürünleri.",
   },
   {
-    s: "Üretici olarak nasıl katılabilirim?",
-    c: "İletişim bölümündeki “Üretici başvurusu” bağlantısıyla bize ulaşın; ürünleriniz ve tahsilat süreciniz için sizinle görüşelim.",
+    s: "Üretici olarak nasıl çalışabilirim?",
+    c: "WhatsApp’tan ya da telefonla bize ulaşın, ürünleriniz ve çalışma koşulları için görüşelim.",
   },
 ];
 
@@ -486,12 +468,11 @@ export function Sss() {
     <section id="sss" className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-4 py-24 lg:grid-cols-[1fr_1.5fr]">
       <div className="flex flex-col gap-6">
         <BolumBasligi
-          ust="Sıkça sorulan sorular"
-          baslik="Merak edilenler"
-          aciklama="Aradığınız yanıtı bulamadıysanız bize doğrudan yazabilirsiniz."
+          baslik="Sık sorulan sorular"
+          aciklama="Sorunuz burada yoksa bize yazın."
         />
         <Disari mesaj={MESAJLAR.genel} className={cn(ikincilDugme, "w-fit")}>
-          Soru sorun
+          WhatsApp’tan yazın
         </Disari>
       </div>
 
@@ -519,12 +500,11 @@ export function IletisimBandi() {
     <section id="iletisim" className="bg-lacivert-900 text-white">
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 py-20 lg:grid-cols-[1.3fr_1fr]">
         <div className="flex flex-col gap-4">
-          <span className="text-sm font-semibold text-lacivert-300">İletişim</span>
           <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-[2.5rem] sm:leading-[1.15]">
-            Vadeli tedarik ya da peşin tahsilat için görüşelim
+            Bize ulaşın
           </h2>
           <p className="max-w-xl text-lg leading-relaxed text-lacivert-300">
-            Alıcı ya da üretici olarak başvurunuzu iletin, size uygun koşulları birlikte belirleyelim.
+            Market ya da üretici olarak çalışmak isterseniz WhatsApp’tan yazın veya arayın.
           </p>
           <a href={TELEFON_ADRESI} className="mt-2 inline-flex w-fit items-center gap-2 text-lg font-semibold hover:text-lacivert-200">
             <Phone className="size-5" strokeWidth={1.75} />
@@ -534,8 +514,8 @@ export function IletisimBandi() {
 
         <div className="divide-y divide-white/15 rounded-lg border border-white/15">
           {[
-            { baslik: "Alıcı başvurusu", alt: "Vadeli mal alımı için", mesaj: MESAJLAR.alici },
-            { baslik: "Üretici başvurusu", alt: "Alacağınızı peşine çevirin", mesaj: MESAJLAR.uretici },
+            { baslik: "Market olarak", alt: "Vadeli alım için teklif isteyin", mesaj: MESAJLAR.alici },
+            { baslik: "Üretici olarak", alt: "Çalışma koşullarını konuşalım", mesaj: MESAJLAR.uretici },
           ].map((b) => (
             <Disari key={b.baslik} mesaj={b.mesaj} className="flex items-center gap-4 px-6 py-5 transition-colors hover:bg-white/5">
               <span className="flex-1">

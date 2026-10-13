@@ -16,7 +16,7 @@ const SUTUNLAR = [
   {
     baslik: "Başvuru",
     baglantilar: [
-      { href: "/#cozumler", etiket: "Alıcılar için" },
+      { href: "/#cozumler", etiket: "Marketler için" },
       { href: "/#cozumler", etiket: "Üreticiler için" },
       { href: "/#iletisim", etiket: "İletişim" },
     ],
@@ -30,8 +30,7 @@ export function SiteAlt() {
         <div className="flex flex-col gap-4">
           <Logo href="/" altMetin={false} ters />
           <p className="max-w-xs text-sm leading-relaxed">
-            Marketlere vadeli mal tedariki, üreticilere teslimatta peşin tahsilat sağlayan faktoring destekli
-            B2B tedarik platformu.
+            Marketlere vadeli mal tedariki, üreticilere anında nakit.
           </p>
         </div>
 
@@ -77,7 +76,6 @@ export function SiteAlt() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs sm:flex-row sm:items-center sm:justify-between">
           <span>© 2026 tedarikcim.net.tr · Tüm hakları saklıdır.</span>
-          <span>Vadeli B2B tedarik · Faktoring destekli tahsilat</span>
         </div>
       </div>
     </footer>
