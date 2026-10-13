@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Phone } from "lucide-react";
 import { Logo } from "@/components/marka/logo";
-import { MESAJLAR, TELEFON_ADRESI, TELEFON_GORUNEN, whatsAppAdresi } from "@/lib/iletisim";
+import { TELEFON_ADRESI, TELEFON_GORUNEN } from "@/lib/iletisim";
 import { MobilMenu } from "./mobil-menu";
 
 export const SITE_BAGLANTILARI = [
@@ -36,14 +36,12 @@ export function SiteUst() {
             <Phone className="size-4" strokeWidth={1.75} />
             {TELEFON_GORUNEN}
           </a>
-          <a
-            href={whatsAppAdresi(MESAJLAR.genel)}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/#iletisim"
             className="hidden h-10 items-center gap-2 rounded-md bg-lacivert-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-lacivert-800 sm:inline-flex"
           >
             Teklif al
-          </a>
+          </Link>
           <MobilMenu baglantilar={SITE_BAGLANTILARI} />
         </div>
       </div>

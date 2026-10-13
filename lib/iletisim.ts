@@ -12,6 +12,4 @@ export function whatsAppAdresi(mesaj: string): string {
 
 export const MESAJLAR = {
   genel: "Merhaba, tedarikcim.net.tr hakkında bilgi almak istiyorum.",
-  alici: "Merhaba, tedarikcim.net.tr üzerinden vadeli mal alımı hakkında bilgi almak istiyorum.",
-  uretici: "Merhaba, tedarikcim.net.tr üzerinden alacaklarımı peşine çevirme hakkında bilgi almak istiyorum.",
 } as const;

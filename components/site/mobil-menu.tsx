@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { MESAJLAR, whatsAppAdresi } from "@/lib/iletisim";
 
 export function MobilMenu({ baglantilar }: { baglantilar: ReadonlyArray<{ href: string; etiket: string }> }) {
   const [acik, setAcik] = useState(false);
@@ -33,14 +32,13 @@ export function MobilMenu({ baglantilar }: { baglantilar: ReadonlyArray<{ href: 
                 {b.etiket}
               </Link>
             ))}
-            <a
-              href={whatsAppAdresi(MESAJLAR.genel)}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/#iletisim"
+              onClick={() => setAcik(false)}
               className="mt-4 inline-flex h-11 items-center justify-center rounded-md bg-lacivert-900 text-sm font-semibold text-white hover:bg-lacivert-800"
             >
               Teklif al
-            </a>
+            </Link>
           </nav>
         </div>
       )}

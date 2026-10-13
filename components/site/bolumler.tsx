@@ -2,6 +2,7 @@
 
 import {
   ArrowRight,
+  ArrowUpRight,
   BadgeCheck,
   Building2,
   Check,
@@ -9,6 +10,7 @@ import {
   Coffee,
   Factory,
   Droplets,
+  MessageCircle,
   Package,
   Phone,
   Receipt,
@@ -63,6 +65,15 @@ const birincilDugme =
 const ikincilDugme =
   "inline-flex h-12 items-center justify-center gap-2 rounded-md border border-lacivert-200 bg-white px-6 text-sm font-semibold text-lacivert-900 transition-colors hover:border-lacivert-300 hover:bg-lacivert-50";
 
+/** Sayfa içi: iletişim bölümüne kaydırır. Dış uygulama (WhatsApp) yalnız açıkça etiketli yerlerden açılır. */
+function IletisimeGit({ className, children }: { className: string; children: React.ReactNode }) {
+  return (
+    <a href="#iletisim" className={className}>
+      {children}
+    </a>
+  );
+}
+
 function Disari({ mesaj, className, children }: { mesaj: string; className: string; children: React.ReactNode }) {
   return (
     <a href={whatsAppAdresi(mesaj)} target="_blank" rel="noopener noreferrer" className={className}>
@@ -90,13 +101,11 @@ export function Hero() {
           </p>
 
           <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            <Disari mesaj={MESAJLAR.alici} className={birincilDugme}>
+            <IletisimeGit className={birincilDugme}>
               Teklif isteyin
               <ArrowRight className="size-4" />
-            </Disari>
-            <Disari mesaj={MESAJLAR.uretici} className={ikincilDugme}>
-              Üretici başvurusu
-            </Disari>
+            </IletisimeGit>
+            <IletisimeGit className={ikincilDugme}>Üretici başvurusu</IletisimeGit>
           </div>
         </div>
 
@@ -172,7 +181,6 @@ export function Cozumler() {
         "Teklif ve sipariş için tek muhatap",
       ],
       cta: "Teklif isteyin",
-      mesaj: MESAJLAR.alici,
       gorsel: GORSELLER.market,
     },
     {
@@ -185,7 +193,6 @@ export function Cozumler() {
         "Vade verdiğiniz için nakitsiz kalmazsınız",
       ],
       cta: "Başvurun",
-      mesaj: MESAJLAR.uretici,
       gorsel: GORSELLER.uretim,
     },
   ];
@@ -216,10 +223,10 @@ export function Cozumler() {
                 ))}
               </ul>
 
-              <Disari mesaj={k.mesaj} className="mt-8 inline-flex w-fit items-center gap-2 text-sm font-semibold text-lacivert-900 hover:text-marka-700">
+              <IletisimeGit className="mt-8 inline-flex w-fit items-center gap-2 text-sm font-semibold text-lacivert-900 hover:text-marka-700">
                 {k.cta}
                 <ArrowRight className="size-4" />
-              </Disari>
+              </IletisimeGit>
             </div>
           </article>
         ))}
@@ -392,13 +399,10 @@ export function Kategoriler() {
           </li>
         ))}
         <li className="bg-white">
-          <Disari
-            mesaj={MESAJLAR.alici}
-            className="flex h-full items-center justify-between gap-3 px-6 py-7 font-semibold text-marka-700 hover:bg-marka-50"
-          >
+          <IletisimeGit className="flex h-full items-center justify-between gap-3 px-6 py-7 font-semibold text-marka-700 hover:bg-marka-50">
             Fiyat bilgisi al
             <ArrowRight className="size-4" />
-          </Disari>
+          </IletisimeGit>
         </li>
       </ul>
     </section>
@@ -472,6 +476,7 @@ export function Sss() {
           aciklama="Sorunuz burada yoksa bize yazın."
         />
         <Disari mesaj={MESAJLAR.genel} className={cn(ikincilDugme, "w-fit")}>
+          <MessageCircle className="size-4" strokeWidth={1.75} />
           WhatsApp’tan yazın
         </Disari>
       </div>
@@ -496,6 +501,17 @@ export function Sss() {
 // ---------------------------------------------------------------------------
 
 export function IletisimBandi() {
+  const kanallar = [
+    {
+      ikon: MessageCircle,
+      baslik: "WhatsApp",
+      alt: "Mesaj gönderin",
+      eylem: "WhatsApp’ı aç",
+      href: whatsAppAdresi(MESAJLAR.genel),
+      dis: true,
+    },
+    { ikon: Phone, baslik: "Telefon", alt: TELEFON_GORUNEN, eylem: "Ara", href: TELEFON_ADRESI, dis: false },
+  ];
   return (
     <section id="iletisim" className="bg-lacivert-900 text-white">
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 py-16 lg:grid-cols-[1.3fr_1fr]">
@@ -504,26 +520,29 @@ export function IletisimBandi() {
             Bize ulaşın
           </h2>
           <p className="max-w-xl text-lg leading-relaxed text-lacivert-300">
-            Market ya da üretici olarak çalışmak isterseniz WhatsApp’tan yazın veya arayın.
+            Market ya da üretici olarak çalışmak isterseniz yazın veya arayın. Hangisi olduğunuzu ve ne
+            aradığınızı kısaca belirtmeniz yeterli.
           </p>
-          <a href={TELEFON_ADRESI} className="mt-2 inline-flex w-fit items-center gap-2 text-lg font-semibold hover:text-lacivert-200">
-            <Phone className="size-5" strokeWidth={1.75} />
-            {TELEFON_GORUNEN}
-          </a>
         </div>
 
         <div className="divide-y divide-white/15 rounded-lg border border-white/15">
-          {[
-            { baslik: "Market olarak", alt: "Vadeli alım için teklif isteyin", mesaj: MESAJLAR.alici },
-            { baslik: "Üretici olarak", alt: "Çalışma koşullarını konuşalım", mesaj: MESAJLAR.uretici },
-          ].map((b) => (
-            <Disari key={b.baslik} mesaj={b.mesaj} className="flex items-center gap-4 px-6 py-5 transition-colors hover:bg-white/5">
+          {kanallar.map((k) => (
+            <a
+              key={k.baslik}
+              href={k.href}
+              {...(k.dis ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              className="group flex items-center gap-4 px-6 py-5 transition-colors hover:bg-white/5"
+            >
+              <k.ikon className="size-6 shrink-0 text-lacivert-300" strokeWidth={1.75} />
               <span className="flex-1">
-                <span className="block font-semibold">{b.baslik}</span>
-                <span className="block text-sm text-lacivert-300">{b.alt}</span>
+                <span className="block font-semibold">{k.baslik}</span>
+                <span className="block text-sm text-lacivert-300">{k.alt}</span>
               </span>
-              <ArrowRight className="size-5 text-lacivert-300" />
-            </Disari>
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-lacivert-200 group-hover:text-white">
+                {k.eylem}
+                {k.dis ? <ArrowUpRight className="size-4" /> : <ArrowRight className="size-4" />}
+              </span>
+            </a>
           ))}
         </div>
       </div>
