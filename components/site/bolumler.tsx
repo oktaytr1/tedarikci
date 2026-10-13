@@ -498,7 +498,7 @@ export function Sss() {
 export function IletisimBandi() {
   return (
     <section id="iletisim" className="bg-lacivert-900 text-white">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 py-20 lg:grid-cols-[1.3fr_1fr]">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 py-16 lg:grid-cols-[1.3fr_1fr]">
         <div className="flex flex-col gap-4">
           <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-[2.5rem] sm:leading-[1.15]">
             Bize ulaşın
