@@ -4,6 +4,7 @@ import { SayfaBasligi } from "@/components/admin/sayfa-basligi";
 import { buttonVariants } from "@/components/ui/button";
 import { urunOnerileri } from "@/lib/admin/urun";
 import { db } from "@/lib/db";
+import { adminKontrol } from "@/lib/admin-auth";
 import { UrunTablosu } from "./urun-tablosu";
 
 type Arama = Promise<Record<string, string | string[] | undefined>>;
@@ -17,6 +18,7 @@ export default function UrunlerSayfasi({ searchParams }: { searchParams: Arama }
 }
 
 async function Icerik({ searchParams }: { searchParams: Arama }) {
+  await adminKontrol();
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q.trim().toLowerCase() : "";
   const durum = typeof sp.durum === "string" ? sp.durum : undefined;
@@ -40,7 +42,9 @@ async function Icerik({ searchParams }: { searchParams: Arama }) {
   return (
     <div className="flex flex-col gap-4">
       <SayfaBasligi baslik="Ürünler" sag={<Link href="/admin/urunler/yeni" className={buttonVariants()}>Yeni ürün</Link>} />
-      <UrunTablosu satirlar={urunler} oneriler={oneriler} />
+      <UrunTablosu
+        satirlar={urunler.map((u) => ({ ...u, liste_fiyat: u.liste_fiyat.toString(), kdv_orani: u.kdv_orani.toString() }))}
+        oneriler={oneriler} />
     </div>
   );
 }

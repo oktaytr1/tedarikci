@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarClock, ChevronRight, MessageCircle, Tag } from "lucide-react";
 import type { KatalogUrunu } from "@/lib/katalog";
 import { oranYaz, paraYaz } from "@/lib/money";
+import { whatsAppAdresi } from "@/lib/iletisim";
 import { UrunGorseli } from "./urun-gorseli";
 
 /** Modern dikey B2B ürün kartı — görsel hiyerarşi, vadeli alım rozeti ve WhatsApp sipariş butonu. */
@@ -15,7 +16,6 @@ export function UrunKarti({
   durumGoster?: boolean;
 }) {
   const whatsAppMesaji = `Merhaba, tedarikcim.net.tr üzerinden "${u.ad}" (${u.kod}) ürünü hakkında bilgi almak istiyorum.`;
-  const whatsAppAdresi = `https://wa.me/905012542020?text=${encodeURIComponent(whatsAppMesaji)}`;
 
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-xl">
@@ -91,7 +91,7 @@ export function UrunKarti({
       {/* Alt Aksiyon Butonları */}
       <div className="flex items-center gap-2 border-t border-border/60 bg-muted/20 p-3">
         <a
-          href={whatsAppAdresi}
+          href={whatsAppAdresi(whatsAppMesaji)}
           target="_blank"
           rel="noopener noreferrer"
           title="WhatsApp ile bilgi al"

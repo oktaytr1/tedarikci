@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { adminKontrol } from "@/lib/admin-auth";
 
-// Merkezi auth guard: (korunmus) route group altındaki TÜM sayfalar
-// otomatik olarak korunur. Yeni sayfa eklendiğinde tekrar adminKontrol()
-// çağırmaya gerek yoktur — bu layout bunu garanti eder.
+// Auth guard: oturumu olmayanı girişe yönlendirir. Layout ve sayfa paralel render edilir;
+// layout'taki yönlendirme sayfanın verisinin akışa girmesini ENGELLEMEZ. Bu yüzden veri okuyan
+// her sayfa da sorgudan önce kendi adminKontrol() çağrısını yapmalıdır.
 export default function KorunmusAdminDuzeni({ children }: { children: React.ReactNode }) {
   return (
     <Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Yükleniyor…</div>}>

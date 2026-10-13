@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { Package } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/marka/logo";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default function AdminDuzeni({ children }: { children: React.ReactNode }) {
   return (
@@ -17,8 +20,8 @@ export default function AdminDuzeni({ children }: { children: React.ReactNode })
             </Link>
           </nav>
           <div className="flex-1" />
-          <Link href="/katalog" className="text-xs text-muted-foreground hover:text-foreground">
-            Kataloğa git →
+          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground">
+            Siteye git →
           </Link>
         </div>
       </header>

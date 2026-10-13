@@ -11,12 +11,15 @@ export function Logo({
   href = "/",
   altMetin = true,
   className,
+  ters,
 }: {
   boyut?: "kucuk" | "orta" | "buyuk";
   baglanti?: boolean;
   href?: string;
   altMetin?: boolean;
   className?: string;
+  /** Koyu zemin üzerinde kullanım. */
+  ters?: boolean;
 }) {
   const boyutlar = {
     kucuk: {
@@ -47,7 +50,7 @@ export function Logo({
       {/* Geometrik B2B Logomark: Akıllı kutu ve bağlantı halkaları */}
       <div
         className={cn(
-          "relative flex items-center justify-center rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-700 text-white shadow-sm ring-1 ring-black/5 dark:from-zinc-100 dark:to-zinc-300 dark:text-zinc-900",
+          ters ? "relative flex items-center justify-center rounded-md bg-white text-lacivert-900" : "relative flex items-center justify-center rounded-md bg-lacivert-900 text-white",
           boyutlar.kutu,
         )}
       >
@@ -72,12 +75,12 @@ export function Logo({
 
       <div className="flex flex-col leading-none">
         <div className="flex items-baseline">
-          <span className={cn("font-bold text-foreground", boyutlar.baslik)}>
+          <span className={cn("font-bold", ters ? "text-white" : "text-lacivert-950", boyutlar.baslik)}>
             tedarikcim
           </span>
           <span
             className={cn(
-              "ml-0.5 font-semibold text-emerald-600 dark:text-emerald-400",
+              cn("ml-0.5 font-semibold", ters ? "text-lacivert-300" : "text-marka-600"),
               boyutlar.alan,
             )}
           >
@@ -87,11 +90,11 @@ export function Logo({
         {altMetin && (
           <span
             className={cn(
-              "font-medium text-muted-foreground tracking-wider uppercase mt-0.5",
+              "font-medium text-lacivert-500 tracking-wider uppercase mt-0.5",
               boyutlar.alt,
             )}
           >
-            B2B Kapalı Katalog
+            B2B Vadeli Tedarik
           </span>
         )}
       </div>

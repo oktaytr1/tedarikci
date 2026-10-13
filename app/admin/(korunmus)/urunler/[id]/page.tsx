@@ -4,6 +4,7 @@ import { AktifRozeti } from "@/components/admin/durum-rozeti";
 import { Bildirim, SayfaBasligi } from "@/components/admin/sayfa-basligi";
 import { urunOnerileri } from "@/lib/admin/urun";
 import { db } from "@/lib/db";
+import { adminKontrol } from "@/lib/admin-auth";
 import { dbOran, miktarYaz, paraGirdiYaz } from "@/lib/money";
 import { UrunFormu } from "../urun-formu";
 import { UrunDurumDugmesi } from "./urun-durum-dugmesi";
@@ -19,6 +20,7 @@ export default function UrunDetaySayfasi(p: Props) {
 }
 
 async function Icerik({ params, searchParams }: Props) {
+  await adminKontrol();
   const id = Number((await params).id);
   if (!Number.isSafeInteger(id) || id <= 0) notFound();
   const u = await db.urun.findUnique({ where: { id } });

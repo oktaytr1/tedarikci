@@ -45,7 +45,7 @@ export function KatalogFiltreleri({
   const filtreVar = !!(sp.get("q") || seciliTedarikci || seciliKategori);
 
   return (
-    <div className="sticky top-[53px] z-20 -mx-4 flex flex-col gap-2.5 border-b border-border/80 bg-background/95 px-4 py-3 shadow-xs backdrop-blur-md sm:mx-0 sm:rounded-2xl sm:border sm:p-4">
+    <div className="sticky top-16 z-20 -mx-4 flex flex-col gap-2.5 border-b border-border/80 bg-background/95 px-4 py-3 shadow-xs backdrop-blur-md sm:mx-0 sm:rounded-2xl sm:border sm:p-4">
       {/* Arama Girişi */}
       <div className="relative flex items-center">
         <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
@@ -79,7 +79,7 @@ export function KatalogFiltreleri({
       </div>
 
       {/* Seçim Filtreleri */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className={`grid grid-cols-1 gap-2 ${tedarikciFiltresi ? "sm:grid-cols-2" : ""}`}>
         {tedarikciFiltresi && (
           <div className="relative">
             <Store className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

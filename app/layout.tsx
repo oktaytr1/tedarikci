@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "tedarikcim.net.tr — B2B Ürün Kataloğu",
-  description: "B2B tedarikçi ürün kataloğu. Ürünleri inceleyin, fiyatları görün.",
+  title: "tedarikcim.net.tr — Vadeli B2B Tedarik",
+  description: "Marketlere vadeli mal tedariki, üreticilere teslimatta peşin tahsilat. Faktoring destekli B2B tedarik.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

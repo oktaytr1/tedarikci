@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Bildirim, SayfaBasligi } from "@/components/admin/sayfa-basligi";
 import { urunOnerileri } from "@/lib/admin/urun";
 import { db } from "@/lib/db";
+import { adminKontrol } from "@/lib/admin-auth";
 import { UrunFormu } from "../urun-formu";
 
 type Arama = Promise<Record<string, string | undefined>>;
@@ -16,6 +17,7 @@ export default function YeniUrunSayfasi({ searchParams }: { searchParams: Arama 
 }
 
 async function Icerik({ searchParams }: { searchParams: Arama }) {
+  await adminKontrol();
   const sp = await searchParams;
   const oneriler = await urunOnerileri(db);
   const eklenen = sp.eklendi
