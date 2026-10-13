@@ -27,17 +27,13 @@ export default async function PaylasimGorseli() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <svg width="64" height="64" viewBox="0 0 32 32">
-            <rect width="32" height="32" rx="6" fill="#ffffff" />
-            <g fill="none" stroke="#10253f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" transform="translate(4 4)">
-              <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
-              <path d="M12 12 4 7.5" />
-              <path d="m12 12 8-4.5" />
-              <path d="M12 12v9" />
-            </g>
+          <svg width="84" height="51" viewBox="0 0 56 34">
+            <path d="M8 26C16 4 40 4 48 26" fill="none" stroke="#ffffff" strokeWidth="3.6" strokeLinecap="round" />
+            <circle cx="8" cy="26" r="5.5" fill="#ffffff" />
+            <circle cx="48" cy="26" r="5.5" fill="#5fbf94" />
           </svg>
-          <div style={{ display: "flex", fontSize: 40 }}>
-            tedarikcim.net.tr
+          <div style={{ display: "flex", fontSize: 44 }}>
+            tedarikcim
           </div>
         </div>
         <div style={{ display: "flex", fontSize: 68, lineHeight: 1.15, maxWidth: 980 }}>

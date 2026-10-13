@@ -11,7 +11,7 @@ export default function AdminDuzeni({ children }: { children: React.ReactNode })
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
           <Link href="/admin" className="flex items-center gap-2">
-            <Logo baglanti={false} className="h-7" />
+            <Logo baglanti={false} />
             <span className="text-sm font-semibold text-muted-foreground">Yönetim</span>
           </Link>
           <nav className="flex items-center gap-3 text-sm">
